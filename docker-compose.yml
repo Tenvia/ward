@@ -1,0 +1,52 @@
+# Ward local Docker demo. In-memory state only — no Postgres/Redis in
+# Phase 1. State is lost when containers restart. Prototype, not
+# production deployment guidance.
+services:
+  ward-api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    ports:
+      - "4317:4317"
+    environment:
+      PORT: "4317"
+      WARD_DEPLOYMENT_MODE: docker
+      WARD_LOOP_WINDOW_MS: "${WARD_LOOP_WINDOW_MS:-10000}"
+      WARD_LOOP_REQUEST_THRESHOLD: "${WARD_LOOP_REQUEST_THRESHOLD:-8}"
+      WARD_ESTIMATED_COST_PER_REQUEST: "${WARD_ESTIMATED_COST_PER_REQUEST:-0.002}"
+      # SQLite prototype persistence on a named volume; tenant state and
+      # audit survive API container restarts.
+      WARD_STORAGE: "${WARD_STORAGE:-sqlite}"
+      WARD_SQLITE_PATH: /data/ward.db
+      WARD_PROXY_FAIL_MODE: "${WARD_PROXY_FAIL_MODE:-open}"
+      # Control auth is off by default for the local demo. To enable:
+      # WARD_REQUIRE_CONTROL_TOKEN=true and set WARD_CONTROL_TOKEN.
+      WARD_REQUIRE_CONTROL_TOKEN: "${WARD_REQUIRE_CONTROL_TOKEN:-false}"
+      WARD_CONTROL_TOKEN: "${WARD_CONTROL_TOKEN:-}"
+    volumes:
+      - ward-data:/data
+
+  control-room:
+    build:
+      context: .
+      dockerfile: apps/control-room/Dockerfile
+    ports:
+      - "5173:5173"
+    depends_on:
+      - ward-api
+
+  demo-saas:
+    build:
+      context: .
+      dockerfile: examples/node-express-ai-saas/Dockerfile
+    ports:
+      - "4401:4401"
+    environment:
+      PORT: "4401"
+      # Container-to-container traffic uses the compose network.
+      WARD_PROXY_BASE_URL: http://ward-api:4317
+    depends_on:
+      - ward-api
+
+volumes:
+  ward-data:

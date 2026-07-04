@@ -1,0 +1,18 @@
+{
+  "name": "ward",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ward: tenant containment for agentic SaaS. Open-source, self-hostable. Phase 1 local prototype.",
+  "devDependencies": {
+    "yaml": "^2.5.0"
+  },
+  "scripts": {
+    "validate:openapi": "node scripts/validate-openapi.mjs",
+    "smoke:openapi": "node scripts/smoke-openapi-conformance.mjs",
+    "smoke:demo": "node scripts/smoke-demo.mjs",
+    "smoke:sdk": "node scripts/smoke-sdk-guard.mjs",
+    "smoke:reliability": "node scripts/smoke-reliability.mjs",
+    "typecheck": "npm run typecheck --prefix apps/api && npm run typecheck --prefix packages/ward-sdk && npm run typecheck --prefix examples/node-express-ai-saas && npm run typecheck --prefix examples/docker-agent && npm run typecheck --prefix apps/control-room",
+    "install:all": "npm install --prefix apps/api && npm install --prefix packages/ward-sdk && npm install --prefix examples/node-express-ai-saas && npm install --prefix examples/docker-agent && npm install --prefix apps/control-room"
+  }
+}

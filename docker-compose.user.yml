@@ -1,0 +1,33 @@
+# Ward user install: one container, one port, no NPM on your machine.
+#
+#   docker compose -f docker-compose.user.yml up --build
+#   open http://localhost:4317        (Control Room, served by the API)
+#
+# Storage is SQLite on a named volume, so containment state and audit
+# survive container restarts. Control auth is ON with a DEMO token —
+# minimal shared-token control auth prototype, not production RBAC.
+# Change WARD_CONTROL_TOKEN before exposing this beyond localhost, and
+# do not expose it publicly at all: this is a prototype.
+services:
+  ward:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    ports:
+      - "4317:4317"
+    environment:
+      PORT: "4317"
+      WARD_DEPLOYMENT_MODE: docker
+      WARD_STORAGE: sqlite
+      WARD_SQLITE_PATH: /data/ward.db
+      WARD_PROXY_FAIL_MODE: "${WARD_PROXY_FAIL_MODE:-open}"
+      WARD_REQUIRE_CONTROL_TOKEN: "${WARD_REQUIRE_CONTROL_TOKEN:-true}"
+      # Demo default — override in .env for anything beyond a local demo.
+      WARD_CONTROL_TOKEN: "${WARD_CONTROL_TOKEN:-ward-demo-token}"
+      WARD_LOOP_WINDOW_MS: "${WARD_LOOP_WINDOW_MS:-10000}"
+      WARD_LOOP_REQUEST_THRESHOLD: "${WARD_LOOP_REQUEST_THRESHOLD:-8}"
+    volumes:
+      - ward-user-data:/data
+
+volumes:
+  ward-user-data:

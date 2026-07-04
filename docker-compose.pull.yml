@@ -1,0 +1,33 @@
+# Ward via a PREBUILT image — prepared for the future registry publish.
+#
+# STATUS: no image has been published yet. This file will work after
+# the first publish (see .github/workflows/docker-image.yml). Until
+# then, use docker-compose.user.yml, which builds locally:
+#
+#   docker compose -f docker-compose.user.yml up --build
+#
+# After publish, users run:
+#
+#   docker compose -f docker-compose.pull.yml up
+#
+# Same behavior as the user bundle: one container on 4317 serving API +
+# Control Room + OpenAPI contract, SQLite on a named volume, and the
+# minimal shared-token control auth prototype (demo token — change it).
+services:
+  ward:
+    image: "${WARD_IMAGE:-ghcr.io/10via/ward-api:latest}"
+    ports:
+      - "4317:4317"
+    environment:
+      PORT: "4317"
+      WARD_DEPLOYMENT_MODE: docker
+      WARD_STORAGE: sqlite
+      WARD_SQLITE_PATH: /data/ward.db
+      WARD_PROXY_FAIL_MODE: "${WARD_PROXY_FAIL_MODE:-open}"
+      WARD_REQUIRE_CONTROL_TOKEN: "${WARD_REQUIRE_CONTROL_TOKEN:-true}"
+      WARD_CONTROL_TOKEN: "${WARD_CONTROL_TOKEN:-ward-demo-token}"
+    volumes:
+      - ward-user-data:/data
+
+volumes:
+  ward-user-data:

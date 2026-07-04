@@ -1,0 +1,1280 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Ward API",
+    "version": "0.1.0",
+    "description": "Ward is tenant containment for AI SaaS: an OpenAI-compatible egress\nproxy plus a tenant control plane. Route agent/tool calls through\nWard with a tenant ID header; operators constrain, pause, resume,\nand audit one tenant while the rest keep running.\n\nHTTP/OpenAPI is Ward's primary integration contract. This document\ndescribes the implemented v0 surface.\n\nHonesty notes (prototype status):\n- Control auth is a single shared bearer token (prototype), NOT\n  production RBAC. It guards mutating /ward/* routes only when\n  WARD_REQUIRE_CONTROL_TOKEN=true; read endpoints are open.\n- POST /v1/chat/completions is OpenAI-compatible enough for the\n  demo and simple integrations; it is not a full OpenAI spec clone\n  (no streaming, no tool-call passthrough guarantees in mock mode).\n- Workflow runners: mock is an implemented prototype; docker is a\n  dev-only prototype disabled by default; kubernetes is planned.\n- Single-node, prototype/demo-supported operation. Production\n  readiness is not claimed.\n"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4317",
+      "description": "Local/self-hosted Ward"
+    }
+  ],
+  "tags": [
+    {
+      "name": "health"
+    },
+    {
+      "name": "proxy"
+    },
+    {
+      "name": "tenants"
+    },
+    {
+      "name": "approvals"
+    },
+    {
+      "name": "workflow-runs"
+    },
+    {
+      "name": "audit"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "operationId": "getHealth",
+        "summary": "Ward health, mode, and feature status",
+        "responses": {
+          "200": {
+            "description": "Health information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/chat/completions": {
+      "post": {
+        "tags": [
+          "proxy"
+        ],
+        "operationId": "createChatCompletion",
+        "summary": "OpenAI-compatible egress endpoint with per-tenant enforcement",
+        "description": "Enforcement is tenant-specific and happens before the request\nis counted or forwarded. Mock upstream by default; pass-through\nwhen WARD_UPSTREAM_OPENAI_BASE_URL and OPENAI_API_KEY are set.\nIf tenant policy lookup fails while Ward is up, behavior\nfollows WARD_PROXY_FAIL_MODE (open: allow with\nx-ward-fail-open: true response header + audit event; closed:\n503).\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/WardTenantId"
+          },
+          {
+            "$ref": "#/components/parameters/WardOperation"
+          },
+          {
+            "$ref": "#/components/parameters/WardCorrelationId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatCompletionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Completion (mock or pass-through)",
+            "headers": {
+              "x-ward-fail-open": {
+                "description": "Present (\"true\") only when the request was allowed via degraded fail-open",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatCompletionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing x-ward-tenant-id header",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WardError"
+                }
+              }
+            }
+          },
+          "423": {
+            "description": "Tenant is paused by an operator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WardError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Tenant is constrained by an operator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WardError"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Upstream error (pass-through mode)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WardError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Policy lookup failed and WARD_PROXY_FAIL_MODE=closed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WardError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ward/tenants": {
+      "get": {
+        "tags": [
+          "tenants"
+        ],
+        "operationId": "listTenants",
+        "summary": "List tenants tracked by Ward",
+        "responses": {
+          "200": {
+            "description": "Tenant list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "tenants"
+                  ],
+                  "properties": {
+                    "tenants": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Tenant"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ward/tenants/{tenantId}": {
+      "get": {
+        "tags": [
+          "tenants"
+        ],
+        "operationId": "getTenant",
+        "summary": "Inspect one tenant",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantIdPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tenant with current pressure evaluation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "tenant"
+                  ],
+                  "properties": {
+                    "tenant": {
+                      "$ref": "#/components/schemas/Tenant"
+                    },
+                    "pressure": {
+                      "type": "object",
+                      "properties": {
+                        "detected": {
+                          "type": "boolean"
+                        },
+                        "requestsInWindow": {
+                          "type": "integer"
+                        },
+                        "windowMs": {
+                          "type": "integer"
+                        },
+                        "threshold": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Tenant not tracked yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WardError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ward/tenants/{tenantId}/constrain": {
+      "post": {
+        "tags": [
+          "tenants"
+        ],
+        "operationId": "constrainTenant",
+        "summary": "Constrain a tenant (direct; control auth when enabled)",
+        "security": [
+          {
+            "controlToken": []
+          },
+          {}
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantIdPath"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransitionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/TransitionResult"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/ward/tenants/{tenantId}/pause": {
+      "post": {
+        "tags": [
+          "tenants"
+        ],
+        "operationId": "pauseTenant",
+        "summary": "Pause a tenant (direct; control auth when enabled)",
+        "security": [
+          {
+            "controlToken": []
+          },
+          {}
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantIdPath"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransitionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/TransitionResult"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/ward/tenants/{tenantId}/resume": {
+      "post": {
+        "tags": [
+          "tenants"
+        ],
+        "operationId": "resumeTenant",
+        "summary": "Resume a tenant (direct; control auth when enabled)",
+        "security": [
+          {
+            "controlToken": []
+          },
+          {}
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantIdPath"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransitionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/TransitionResult"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/ward/tenants/{tenantId}/approval": {
+      "post": {
+        "tags": [
+          "approvals"
+        ],
+        "operationId": "requestApproval",
+        "summary": "Request a single-use approval token for a containment action",
+        "description": "Issues a short-lived (default 120s), single-use token bound to\nthe tenant and action, plus the exact confirmation phrase the\noperator must echo back. Prototype operator boundary.\n",
+        "security": [
+          {
+            "controlToken": []
+          },
+          {}
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantIdPath"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Approval envelope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid action",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WardError"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/ward/tenants/{tenantId}/apply-approved-action": {
+      "post": {
+        "tags": [
+          "approvals"
+        ],
+        "operationId": "applyApprovedAction",
+        "summary": "Consume an approval token by echoing the exact phrase",
+        "security": [
+          {
+            "controlToken": []
+          },
+          {}
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantIdPath"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplyApprovedActionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/TransitionResult"
+          },
+          "400": {
+            "description": "Token not found / already used / expired / tenant mismatch / phrase mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WardError"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/ward/workflow-runs": {
+      "get": {
+        "tags": [
+          "workflow-runs"
+        ],
+        "operationId": "listWorkflowRuns",
+        "summary": "List workflow runs",
+        "responses": {
+          "200": {
+            "description": "Workflow runs, newest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "workflowRuns"
+                  ],
+                  "properties": {
+                    "workflowRuns": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/WorkflowRun"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "workflow-runs"
+        ],
+        "operationId": "createWorkflowRun",
+        "summary": "Create a workflow run (control auth when enabled)",
+        "description": "Containment rules: paused or constrained tenant -> run is\ncreated as \"blocked\" and never executed. Runner status: mock =\nimplemented prototype; docker = dev-only prototype, disabled\nunless WARD_ENABLE_DOCKER_RUNNER=true (allowlisted images\nonly); kubernetes = planned (fails with a clear error).\n",
+        "security": [
+          {
+            "controlToken": []
+          },
+          {}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowRunRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created run (may already be blocked)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "workflowRun"
+                  ],
+                  "properties": {
+                    "workflowRun": {
+                      "$ref": "#/components/schemas/WorkflowRun"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing tenantId or invalid runner",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WardError"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/ward/workflow-runs/{runId}": {
+      "get": {
+        "tags": [
+          "workflow-runs"
+        ],
+        "operationId": "getWorkflowRun",
+        "summary": "Inspect one workflow run",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RunIdPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The run",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "workflowRun"
+                  ],
+                  "properties": {
+                    "workflowRun": {
+                      "$ref": "#/components/schemas/WorkflowRun"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WardError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ward/workflow-runs/{runId}/cancel": {
+      "post": {
+        "tags": [
+          "workflow-runs"
+        ],
+        "operationId": "cancelWorkflowRun",
+        "summary": "Cancel a queued/running workflow run (control auth when enabled)",
+        "security": [
+          {
+            "controlToken": []
+          },
+          {}
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RunIdPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The run after cancellation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "workflowRun"
+                  ],
+                  "properties": {
+                    "workflowRun": {
+                      "$ref": "#/components/schemas/WorkflowRun"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WardError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ward/audit": {
+      "get": {
+        "tags": [
+          "audit"
+        ],
+        "operationId": "getAudit",
+        "summary": "Audit trail (approvals, transitions, detections, run events)",
+        "responses": {
+          "200": {
+            "description": "Audit events, oldest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "audit"
+                  ],
+                  "properties": {
+                    "audit": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AuditEvent"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ward/reset": {
+      "post": {
+        "tags": [
+          "audit"
+        ],
+        "operationId": "resetWard",
+        "summary": "Reset all in-memory/persisted demo state (control auth when enabled)",
+        "security": [
+          {
+            "controlToken": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "Reset confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "reset"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "controlToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Minimal shared-token control auth PROTOTYPE (not production\nRBAC). Required on mutating /ward/* routes only when the API\nruns with WARD_REQUIRE_CONTROL_TOKEN=true; otherwise these\nroutes are open (the default for local demos, loudly flagged\nin /health).\n"
+      }
+    },
+    "parameters": {
+      "WardTenantId": {
+        "name": "x-ward-tenant-id",
+        "in": "header",
+        "required": true,
+        "description": "Tenant this call is attributed to. Requests without it are rejected (400).",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "WardOperation": {
+        "name": "x-ward-operation",
+        "in": "header",
+        "required": false,
+        "description": "Logical operation label (e.g. agent.tool_call). Defaults to ai.chat_completion.",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "WardCorrelationId": {
+        "name": "x-ward-correlation-id",
+        "in": "header",
+        "required": false,
+        "description": "Caller-supplied correlation id, echoed into audit evidence.",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "TenantIdPath": {
+        "name": "tenantId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "RunIdPath": {
+        "name": "runId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Control auth required and token missing/invalid",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/WardError"
+            }
+          }
+        }
+      },
+      "TransitionResult": {
+        "description": "Tenant after the transition plus the audit event",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "tenant",
+                "audit"
+              ],
+              "properties": {
+                "tenant": {
+                  "$ref": "#/components/schemas/Tenant"
+                },
+                "audit": {
+                  "$ref": "#/components/schemas/AuditEvent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "TenantState": {
+        "type": "string",
+        "enum": [
+          "running",
+          "constrained",
+          "paused"
+        ]
+      },
+      "Tenant": {
+        "type": "object",
+        "required": [
+          "tenantId",
+          "state",
+          "requestCount",
+          "detectedPressure",
+          "estimatedSpend",
+          "activeWorkflowRuns",
+          "deploymentMode",
+          "updatedAt"
+        ],
+        "properties": {
+          "tenantId": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/TenantState"
+          },
+          "requestCount": {
+            "type": "integer"
+          },
+          "recentRequestTimestamps": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "detectedPressure": {
+            "type": "boolean"
+          },
+          "lastPressureReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "estimatedSpend": {
+            "type": "number",
+            "description": "Fixed per-call estimate; NOT a real cost model."
+          },
+          "activeWorkflowRuns": {
+            "type": "integer"
+          },
+          "deploymentMode": {
+            "type": "string",
+            "enum": [
+              "local",
+              "docker",
+              "kubernetes",
+              "hosted"
+            ]
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AuditEvent": {
+        "type": "object",
+        "required": [
+          "id",
+          "timestamp",
+          "tenantId",
+          "action",
+          "actor",
+          "reason"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "tenantId": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "actor": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "previousState": {
+            "type": "string"
+          },
+          "nextState": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "ApprovalRequest": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "constrain",
+              "pause",
+              "resume"
+            ]
+          },
+          "actor": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "ApprovalResponse": {
+        "type": "object",
+        "required": [
+          "approvalToken",
+          "requiredPhrase",
+          "expiresAt",
+          "action",
+          "tenantId"
+        ],
+        "properties": {
+          "approvalToken": {
+            "type": "string"
+          },
+          "requiredPhrase": {
+            "type": "string",
+            "description": "Must be echoed back byte-for-byte in apply-approved-action."
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "constrain",
+              "pause",
+              "resume"
+            ]
+          },
+          "tenantId": {
+            "type": "string"
+          }
+        }
+      },
+      "ApplyApprovedActionRequest": {
+        "type": "object",
+        "required": [
+          "approvalToken",
+          "phrase"
+        ],
+        "properties": {
+          "approvalToken": {
+            "type": "string"
+          },
+          "phrase": {
+            "type": "string"
+          }
+        }
+      },
+      "TransitionRequest": {
+        "type": "object",
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "WorkflowRunStatus": {
+        "type": "string",
+        "enum": [
+          "queued",
+          "running",
+          "completed",
+          "failed",
+          "cancelled",
+          "blocked"
+        ]
+      },
+      "WorkflowRun": {
+        "type": "object",
+        "required": [
+          "id",
+          "tenantId",
+          "runner",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "tenantId": {
+            "type": "string"
+          },
+          "runner": {
+            "type": "string",
+            "enum": [
+              "mock",
+              "docker",
+              "kubernetes"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/WorkflowRunStatus"
+          },
+          "image": {
+            "type": "string"
+          },
+          "command": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "result": {},
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "WorkflowRunRequest": {
+        "type": "object",
+        "required": [
+          "tenantId",
+          "runner"
+        ],
+        "properties": {
+          "tenantId": {
+            "type": "string"
+          },
+          "runner": {
+            "type": "string",
+            "enum": [
+              "mock",
+              "docker",
+              "kubernetes"
+            ]
+          },
+          "image": {
+            "type": "string"
+          },
+          "command": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "WardError": {
+        "type": "object",
+        "required": [
+          "error",
+          "message"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Stable machine-readable code, e.g. ward_tenant_constrained, ward_control_unauthorized."
+          },
+          "message": {
+            "type": "string"
+          },
+          "tenantId": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/TenantState"
+          }
+        }
+      },
+      "HealthResponse": {
+        "type": "object",
+        "required": [
+          "status",
+          "service"
+        ],
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "service": {
+            "type": "string"
+          },
+          "deploymentMode": {
+            "type": "string"
+          },
+          "upstreamMode": {
+            "type": "string",
+            "enum": [
+              "mock_upstream",
+              "pass_through"
+            ]
+          },
+          "storage": {
+            "type": "string",
+            "enum": [
+              "memory",
+              "sqlite"
+            ]
+          },
+          "proxyFailMode": {
+            "type": "string",
+            "enum": [
+              "open",
+              "closed"
+            ]
+          },
+          "controlAuth": {
+            "type": "string"
+          },
+          "controlRoomBundled": {
+            "type": "boolean"
+          },
+          "openapi": {
+            "type": "object",
+            "properties": {
+              "served": {
+                "type": "boolean"
+              },
+              "path": {
+                "type": "string"
+              }
+            }
+          },
+          "runners": {
+            "type": "object",
+            "properties": {
+              "mock": {
+                "type": "string"
+              },
+              "docker": {
+                "type": "string"
+              },
+              "kubernetes": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "ChatCompletionRequest": {
+        "type": "object",
+        "description": "OpenAI-compatible enough for the demo; not a full spec clone.",
+        "properties": {
+          "model": {
+            "type": "string"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "additionalProperties": true
+      },
+      "ChatCompletionResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string"
+          },
+          "created": {
+            "type": "integer"
+          },
+          "model": {
+            "type": "string"
+          },
+          "ward": {
+            "type": "object",
+            "description": "Present in mock mode; identifies tenant attribution and mock status.",
+            "properties": {
+              "mode": {
+                "type": "string"
+              },
+              "tenantId": {
+                "type": "string"
+              },
+              "note": {
+                "type": "string"
+              }
+            }
+          },
+          "choices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "integer"
+                },
+                "message": {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "finish_reason": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "usage": {
+            "type": "object",
+            "properties": {
+              "prompt_tokens": {
+                "type": "integer"
+              },
+              "completion_tokens": {
+                "type": "integer"
+              },
+              "total_tokens": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  }
+}

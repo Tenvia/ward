@@ -1,0 +1,39 @@
+# Optional contributor workflow. mise (https://mise.jdx.dev) is NOT
+# required: every task below is a plain command you can run directly,
+# and no verification path depends on mise. Users installing Ward via
+# Docker never need mise or NPM.
+
+[tools]
+node = "22"
+
+[tasks.dev]
+description = "Run Ward API in watch mode (contributor)"
+run = "npm run dev --prefix apps/api"
+
+[tasks."api:dev"]
+description = "Run Ward API in watch mode"
+run = "npm run dev --prefix apps/api"
+
+[tasks."ui:dev"]
+description = "Run Control Room dev server on :5173"
+run = "npm run dev --prefix apps/control-room"
+
+[tasks."ui:build"]
+description = "Build Control Room static assets"
+run = "npm run build --prefix apps/control-room"
+
+[tasks.smoke]
+description = "Run the containment smoke test (API must be running)"
+run = "npm run smoke:demo"
+
+[tasks."smoke:user"]
+description = "Run the no-NPM user install smoke test (Docker only)"
+run = "./scripts/smoke-user-install.sh"
+
+[tasks."docker:user"]
+description = "Start the user-facing single-container Ward bundle"
+run = "docker compose -f docker-compose.user.yml up --build"
+
+[tasks."docker:down"]
+description = "Stop the user-facing bundle (volume survives)"
+run = "docker compose -f docker-compose.user.yml down"

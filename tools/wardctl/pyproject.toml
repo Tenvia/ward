@@ -1,0 +1,16 @@
+[project]
+name = "wardctl"
+version = "0.1.0"
+description = "Tiny CLI helper for operating a running Ward instance over HTTP. Prototype; Docker remains the primary Ward install path."
+requires-python = ">=3.9"
+dependencies = []
+
+[project.scripts]
+wardctl = "wardctl.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/wardctl"]

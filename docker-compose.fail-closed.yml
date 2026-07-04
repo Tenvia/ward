@@ -1,0 +1,22 @@
+# Fail-closed overlay for the user bundle: block proxied traffic when
+# tenant policy lookup fails, instead of allowing it (503
+# ward_policy_unavailable).
+#
+#   docker compose -f docker-compose.user.yml -f docker-compose.fail-closed.yml up --build
+#
+# For the contributor compose (docker-compose.yml), set
+# WARD_PROXY_FAIL_MODE=closed in .env instead — it is passed through.
+#
+# Trade-off, stated honestly:
+# - fail-open (default) is safer for early adoption: a Ward-internal
+#   policy fault never blocks customer traffic, and every fail-open
+#   response is marked with x-ward-fail-open plus an audit event.
+# - fail-closed is stricter: right when uncontrolled AI calls are worse
+#   than blocked ones (e.g. hard spend caps, regulated actions).
+# - Neither mode helps when the Ward proxy process/network is fully
+#   down. That requires customer-side fallback routing or an HA Ward
+#   deployment, which does not exist yet.
+services:
+  ward:
+    environment:
+      WARD_PROXY_FAIL_MODE: closed

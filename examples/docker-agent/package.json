@@ -1,0 +1,16 @@
+{
+  "name": "ward-example-docker-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Example agent container for Ward's Docker runner path. Calls the Ward egress proxy in a bounded loop. Prototype.",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/agent.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.0"
+  }
+}

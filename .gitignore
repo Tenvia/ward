@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.log
+.ward/
+.env
+test-results/
+playwright-report/
+.venv/
