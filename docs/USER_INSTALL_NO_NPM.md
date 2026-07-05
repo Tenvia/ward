@@ -43,7 +43,8 @@ What you get:
 Control auth warning: this is a single shared bearer token — a
 prototype boundary, NOT production RBAC. Override it in `.env`
 (`WARD_CONTROL_TOKEN=...`) for anything beyond a local demo, and do
-not expose Ward publicly at all yet.
+not expose Ward publicly at all yet. See `docs/ENVIRONMENT.md` for the
+full environment contract and safe evaluator baseline.
 
 ## Try containment (curl only)
 

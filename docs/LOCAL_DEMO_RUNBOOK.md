@@ -40,20 +40,19 @@ cd ~/Projects/10via/ward
 npm run smoke:demo
 ```
 
-Runs the whole containment sequence below (16 checks) and prints a
-pass/fail report. It resets Ward state first and resumes Globex when
-done.
+Runs the whole containment sequence below and prints its own pass/fail
+count. It resets Ward state first and resumes Globex when done.
 
 Also available:
 
 ```bash
-# SDK guard + fail modes (API must be running): 6 checks
+# SDK guard + fail modes (API must be running; script prints its count)
 npm run smoke:sdk
 
-# Fail-open/fail-closed + control auth (self-starting, port 4390): 13 checks
+# Fail-open/fail-closed + control auth (self-starting, port 4390)
 npm run smoke:reliability
 
-# No-NPM user Docker path (docker + curl only): 15 checks
+# No-NPM user Docker path (docker + curl only; script prints its count)
 ./scripts/smoke-user-install.sh
 ```
 

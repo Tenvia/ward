@@ -12,7 +12,7 @@ do not cut the RC.
   (Includes: OpenAPI validation, typechecks, SDK + Control Room
   builds, containment smoke, SDK smoke, OpenAPI live conformance,
   reliability smoke, both browser E2Es, all compose configs, local
-  image build, 16-check user install smoke.)
+  image build, and user install smoke.)
 - `npm run smoke:openapi` against a running instance — live responses
   conform to `openapi/ward.v0.yaml`.
 - `docker compose -f docker-compose.user.yml up --build` starts one

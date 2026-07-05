@@ -3,9 +3,10 @@
 ## Summary
 
 `docker-compose.yml` runs the full local demo in containers: Ward API
-(4317), Control Room (5173), and the demo SaaS app (4401). In-memory
-state only — restarting the API container resets everything. This is
-a demo path, not production deployment guidance.
+(4317), Control Room (5173), and the demo SaaS app (4401). The API
+defaults to SQLite on the `ward-data` named volume, so tenant state and
+audit survive API container restarts. This is a demo path, not
+production deployment guidance.
 
 ## User bundle (primary path, no NPM)
 
@@ -13,7 +14,7 @@ a demo path, not production deployment guidance.
 cd ~/Projects/10via/ward
 docker compose -f docker-compose.user.yml up --build
 # open http://localhost:4317  (Control Room served by the API)
-./scripts/smoke-user-install.sh   # 15-check verification, docker + curl only
+./scripts/smoke-user-install.sh   # docker + curl verification; script prints its count
 ```
 
 Release image build (maintainers; never pushes):
@@ -24,8 +25,8 @@ Release image build (maintainers; never pushes):
 ```
 
 Publishing happens only via `.github/workflows/docker-image.yml`
-(version tags or manual dispatch); it has not been executed yet.
-`docker-compose.pull.yml` activates once an image exists. Procedure
+(version tags or manual dispatch). `docker-compose.pull.yml` runs the
+prebuilt GHCR image and can be pinned with `WARD_IMAGE=...`. Procedure
 and gates: `docs/PUBLISH_READINESS.md` and
 `docs/RELEASE_CANDIDATE_CHECKLIST.md`.
 
@@ -118,9 +119,10 @@ this container itself via the dev-only Docker runner above.
 
 ## Environment
 
-Copy `.env.example` to `.env` to override detection thresholds; the
-compose file passes `WARD_LOOP_WINDOW_MS`, `WARD_LOOP_REQUEST_THRESHOLD`,
-and `WARD_ESTIMATED_COST_PER_REQUEST` through to the API.
+Use `docs/ENVIRONMENT.md` as the source of truth for supported
+environment variables, safe evaluator defaults, prototype-only flags,
+and dangerous/dev-only settings. Copy `.env.example` to `.env` for a
+local starting point.
 
 ## Verify config without starting
 

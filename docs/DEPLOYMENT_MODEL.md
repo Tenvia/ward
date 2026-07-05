@@ -6,6 +6,10 @@ Ward is Docker-first, Kubernetes-next, hosted-later. Every mode below
 except "Local dev" and "Docker Compose" is planned, not built. Ward
 never requires Saastle in any mode.
 
+Environment variables and safe evaluator defaults are documented in
+`docs/ENVIRONMENT.md`; deployment mode names below are prototype labels
+unless a section explicitly says the mode is implemented.
+
 ## Modes
 
 ### 1. Local dev (implemented prototype)
@@ -90,7 +94,7 @@ option.
 | Backend | Setting | Status |
 | --- | --- | --- |
 | memory | `WARD_STORAGE=memory` (default) | implemented prototype; all state lost on restart |
-| sqlite | `WARD_STORAGE=sqlite` + `WARD_SQLITE_PATH` | prototype; tenants + audit events persist across restart (verified locally by `npm run smoke:audit-durability`, 44/44 checks). Uses Node's built-in `node:sqlite` (experimental in Node 22). Workflow runs and approval tokens remain in-memory. |
+| sqlite | `WARD_STORAGE=sqlite` + `WARD_SQLITE_PATH` | prototype; tenants + audit events persist across restart (verified locally by `npm run smoke:audit-durability`; the script prints its own count). Uses Node's built-in `node:sqlite` (experimental in Node 22). Workflow runs and approval tokens remain in-memory. |
 
 ## Failure behavior
 

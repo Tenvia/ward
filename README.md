@@ -265,6 +265,7 @@ docs/                       Runbooks, claims, releases, strategy
 | Doc | What it covers |
 | --- | --- |
 | [USER_INSTALL_NO_NPM](docs/USER_INSTALL_NO_NPM.md) | The user install path |
+| [ENVIRONMENT](docs/ENVIRONMENT.md) | Supported env vars, safe evaluator baseline, prototype-only flags |
 | [DESIGN_PARTNER_QUICKSTART](docs/DESIGN_PARTNER_QUICKSTART.md) | Evaluate Ward in 8 steps |
 | [DESIGN_PARTNER_EVALUATION_SCRIPT](docs/DESIGN_PARTNER_EVALUATION_SCRIPT.md) | How to demo/discuss Ward |
 | [DEMO_SCRIPT](docs/DEMO_SCRIPT.md) | The Acme/Globex walkthrough |
