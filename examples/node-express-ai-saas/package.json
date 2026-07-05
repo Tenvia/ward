@@ -1,6 +1,7 @@
 {
   "name": "ward-demo-node-express-ai-saas",
   "version": "0.1.0",
+  "license": "Apache-2.0",
   "private": true,
   "description": "Minimal Node/Express demo app used to prove Ward's egress proxy integration story. Prototype only.",
   "type": "module",

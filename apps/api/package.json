@@ -1,6 +1,7 @@
 {
   "name": "@ward/api",
   "version": "0.1.0",
+  "license": "Apache-2.0",
   "private": true,
   "description": "Ward API: tenant containment control plane for agentic workflows. Phase 1 prototype, in-memory.",
   "type": "module",

@@ -1,6 +1,7 @@
 {
   "name": "@ward/control-room",
   "version": "0.1.0",
+  "license": "Apache-2.0",
   "private": true,
   "description": "Ward Control Room: operator UI for tenant containment. Prototype.",
   "type": "module",

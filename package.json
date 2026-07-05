@@ -1,6 +1,7 @@
 {
   "name": "ward",
   "version": "0.1.0",
+  "license": "Apache-2.0",
   "private": true,
   "description": "Ward: tenant containment for agentic SaaS. Open-source, self-hostable. Phase 1 local prototype.",
   "devDependencies": {

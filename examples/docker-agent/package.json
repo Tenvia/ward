@@ -1,6 +1,7 @@
 {
   "name": "ward-example-docker-agent",
   "version": "0.1.0",
+  "license": "Apache-2.0",
   "private": true,
   "description": "Example agent container for Ward's Docker runner path. Calls the Ward egress proxy in a bounded loop. Prototype.",
   "type": "module",

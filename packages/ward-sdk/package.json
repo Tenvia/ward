@@ -1,6 +1,7 @@
 {
   "name": "ward-sdk",
   "version": "0.1.0",
+  "license": "Apache-2.0",
   "description": "TypeScript SDK for the Ward tenant containment API. Cooperative containment guard included. Prototype.",
   "type": "module",
   "main": "dist/index.js",

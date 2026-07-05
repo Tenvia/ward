@@ -2,6 +2,7 @@
 name = "wardctl"
 version = "0.1.0"
 description = "Tiny CLI helper for operating a running Ward instance over HTTP. Prototype; Docker remains the primary Ward install path."
+license = "Apache-2.0"
 requires-python = ">=3.9"
 dependencies = []
 
