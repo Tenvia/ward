@@ -1,8 +1,51 @@
 # Ward Build Status
 
-Last build session: 2026-07-05 (eighth session — first image publish
-verified; docs updated to the pull path).
+## Ninth session (2026-07-05): RC2 verification + docs/claims sync
 
+What shipped this session:
+
+- `apps/api/src/types.ts`, `config.ts`, `server.ts`, `openaiProxy.ts`,
+  `apps/api/src/*.test.ts` — observe-only mode, mock pass-through
+  verification, deterministic mock SSE streaming, unit test baseline.
+- `openapi/ward.v0.yaml` (+ generated `.json`) — added `stream` to
+  `ChatCompletionRequest`, `text/event-stream` response content for
+  200, `x-ward-would-block` header on 200, updated honesty notes.
+- New scripts: `smoke-observe-only.mjs`, `smoke-pass-through-mock.mjs`,
+  `smoke-streaming-mock.mjs`, `bench-latency.mjs`. All wired into root
+  `package.json`.
+- `docs/CLAIMS_AND_EVIDENCE.md` — four new ledger rows.
+- `docs/releases/v0.1.0-rc2.md` — implementation summary.
+- `ROADMAP.md` Phase 1 first four boxes updated.
+
+Verification battery (all passed):
+
+| Command | Result |
+| --- | --- |
+| `npm run test:unit` | 27/27 pass (4 suites, 0 failures) |
+| `npm run typecheck --prefix apps/api` | exit 0, zero diagnostics |
+| `npm run validate:openapi` | 14 paths, 13 schemas |
+| `npm run smoke:observe-only` | 13/13 PASS |
+| `npm run smoke:pass-through:mock` | 9/9 PASS |
+| `npm run smoke:streaming:mock` | 20/20 PASS |
+| `npm run smoke:openapi` | 26/26 checks PASS |
+| `npm run bench:latency` | 3/3 scenarios, all 50/50 successes |
+
+Benchmark sample output (50 requests per scenario, Node v22.22.3, darwin/arm64):
+
+```
+# mock_chat_completion   p50 0.57 ms  p95 1.61 ms  min/max 0.36 / 5.59 ms
+# mock_pass_through      p50 1.40 ms  p95 2.40 ms  min/max 0.79 / 3.52 ms
+# observe_constrained_would_block
+                         p50 0.51 ms  p95 1.19 ms  min/max 0.37 / 1.65 ms
+Bench: 3/3 scenarios passed.
+```
+
+Local/dev only — production SLA, provider-wide overhead, and
+generalization beyond this machine are NOT claimed.
+
+Open RC2 items not addressed by design (must not appear in claims):
+streaming pass-through against a real provider, mid-stream cancel audit,
+live-provider latency, and the phase-2 receipts + Postgres + K8s work.
 ## Eighth session (2026-07-05): first publish verified
 
 The `v0.1.0-rc1` tag was pushed (re-cut at `bca2396` after the

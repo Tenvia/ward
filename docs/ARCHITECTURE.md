@@ -68,6 +68,32 @@ Enforcement is tenant-specific by construction: state is keyed by
 tenant ID and checked per request. Constraining Globex cannot block
 Acme.
 
+## Streaming and observe-only (RC2 prototype)
+
+Two RC2 additions live alongside the existing enforce-mode block in
+`apps/api/src/server.ts`:
+
+- **`stream: true` request body** — completes the same enforcement
+  step as a non-stream request (tenant header validation, policy
+  lookup, paused/constrained check, request counting, pressure
+  detection), then writes a deterministic mock SSE stream
+  (`mockStreamChatCompletion` in `openaiProxy.ts`). Enforce-mode
+  paused/constrained/missing-tenant responses remain JSON WardError.
+  Pass-through streaming is not supported — even when
+  `WARD_UPSTREAM_OPENAI_BASE_URL` is set, a `stream: true` request
+  receives the deterministic mock, never upstream SSE, because
+  `forwardToUpstream` does `await response.json()` and would deadlock
+  on SSE.
+- **`WARD_MODE=observe`** — when set, an otherwise-valid proxied
+  request for a paused or constrained tenant is allowed through; the
+  route sets `x-ward-would-block: paused|constrained` and emits a
+  `would_block` audit event before continuing to the mock or
+  pass-through branch. Observe mode does NOT bypass missing-tenant
+  400, control-auth 401, policy-unavailable 503, or upstream errors.
+  Verified by `npm run smoke:observe-only` (13/13) and
+  `npm run smoke:streaming:mock` (20/20); see
+  `docs/CLAIMS_AND_EVIDENCE.md` for the exact rows.
+
 ## Workflow-run containment rules (Phase 1)
 
 - Paused tenant: new runs are created as `blocked`, never executed.

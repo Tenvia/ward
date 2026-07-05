@@ -99,5 +99,7 @@ option.
 | --- | --- | --- |
 | SDK cannot reach Ward | `guard()` failMode: open (default) runs the callback and reports `fail_open`; closed refuses | implemented prototype (`npm run smoke:sdk`) |
 | Ward API up, policy lookup fails | `WARD_PROXY_FAIL_MODE`: open (default) allows with `x-ward-fail-open` header + audit; closed blocks 503. Successful policy reads always enforce. | implemented prototype (`npm run smoke:reliability`) |
+| Paused/constrained tenant + observe mode | `WARD_MODE=observe` lets otherwise-valid proxied traffic through with `x-ward-would-block` + `would_block` audit. Malformed requests, missing-tenant 400, control-auth 401, fail-closed 503, and upstream errors are still enforced. | implemented prototype (`npm run smoke:observe-only`) |
+| `stream: true` on a paused/constrained tenant in enforce mode | Returns 423/429 JSON WardError BEFORE any SSE header is flushed; mock or real upstream receives no request. | implemented prototype (`npm run smoke:streaming:mock`) |
 | Ward proxy process/network hard-down | Ward cannot pass traffic; requires customer-side fallback routing or HA Ward deployment | planned — not claimed |
 | Control endpoint safety | Shared bearer token on mutating `/ward/*` routes (`WARD_REQUIRE_CONTROL_TOKEN`) | implemented prototype; not production RBAC |

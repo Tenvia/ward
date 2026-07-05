@@ -130,9 +130,19 @@ npm run smoke:openapi          # live responses conform to the contract
 npm run smoke:demo             # end-to-end containment demo
 npm run smoke:sdk              # SDK guard + fail modes
 npm run smoke:reliability      # fail-open/closed + control auth
+npm run smoke:observe-only     # observe-mode would-block evidence (RC2)
+npm run smoke:pass-through:mock  # forwardToUpstream against a local mock (RC2)
+npm run smoke:streaming:mock   # deterministic mock SSE, enforcement first (RC2)
+npm run bench:latency          # local p50/p95 across mock + observe paths (RC2)
+npm run test:unit              # core state/approval/audit unit baseline (RC2)
 ./scripts/smoke-user-install.sh          # no-NPM user path (docker + curl)
 cd apps/control-room && npm run test:e2e && npm run test:e2e:auth
 ```
+
+RC2 verification notes: the four RC2 smokes and the local benchmark
+exercise the data-plane proof without paid provider calls. None of
+these claim production SLA, broad provider compatibility, or
+design-partner readiness; see `docs/CLAIMS_AND_EVIDENCE.md`.
 
 ## Repository layout
 

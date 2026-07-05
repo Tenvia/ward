@@ -57,19 +57,31 @@ Goal: turn "credible evaluation" into "installable product."
 ## Phase 1 — design-partner proof (v0.2)
 
 Goal: 3–5 design partners running Ward against real traffic in staging.
-The honest blockers to that today, in order:
+Honest status (2026-07-05, ninth session): the data-plane blockers
+below are addressed by `prototype, demo-supported` claims with
+repeatable local verification; the remaining partner-ready gate is
+*not* cleared (see `docs/CLAIMS_AND_EVIDENCE.md` for the exact
+ledger row text).
 
-- [ ] **Streaming (SSE) pass-through** — most production AI SaaS streams;
-      without it Ward cannot sit in a real egress path
-- [ ] **Verified pass-through mode** — the real-upstream path is
-      currently untested; it must be exercised and benchmarked
-- [ ] **Observe-only mode** — attribution, pressure detection, and audit
-      with enforcement disabled, so partners can adopt Ward with zero
-      blocking risk on day one and turn on enforcement per tenant when
-      they trust it
-- [ ] **Published latency numbers** — measured proxy overhead, not
-      asserted
-- [ ] Design-partner feedback loop (issue template + weekly triage)
+- [x] **Streaming (SSE) for `/v1/chat/completions`** — deterministic
+      mock SSE only; enforcement completes before SSE headers flush.
+      Pass-through streaming is not yet supported.
+- [x] **Mock pass-through verification** — `forwardToUpstream` exercised
+      against a local mock upstream; live provider compatibility is not
+      claimed.
+- [x] **Observe-only mode** — `WARD_MODE=observe|enforce`.
+      Otherwise-valid proxied traffic is not blocked while emitting
+      `x-ward-would-block` and a `would_block` audit event. Malformed
+      requests, missing tenant headers, configured fail-closed paths,
+      and upstream errors are still enforced.
+- [x] **Local latency benchmark** — `npm run bench:latency` reports
+      p50/p95 with environment context on this dev machine. Production
+      SLA, provider-wide overhead, and generalization are not claimed.
+- [ ] Design-partner feedback loop (issue template + weekly triage) —
+      not started
+- [ ] **Partner-ready gate** — not cleared. Outstanding: pass-through
+      streaming against a real provider, live-provider latency, the
+      design-partner feedback loop, and Phase 2 receipts.
 
 ## Phase 2 — the incident wedge (v0.3)
 
