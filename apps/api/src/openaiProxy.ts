@@ -37,6 +37,36 @@ export function mockChatCompletion(body: unknown, tenantId: string) {
   };
 }
 
+export async function* mockStreamChatCompletion(
+  body: unknown,
+  tenantId: string
+): AsyncIterable<string> {
+  const id = `chatcmpl-mock-${Date.now()}`;
+  const created = Math.floor(Date.now() / 1000);
+  const model = (body as { model?: string })?.model ?? "ward-mock-model";
+  // Deterministic chunk sequence — fixed text, fixed order. No
+  // provider-specific edge cases.
+  const words = ["Ward ", "deterministic ", "mock ", "stream."];
+  for (const content of words) {
+    yield `data: ${JSON.stringify({
+      id,
+      object: "chat.completion.chunk",
+      created,
+      model,
+      choices: [
+        { index: 0, delta: { content }, finish_reason: null },
+      ],
+    })}\n\n`;
+  }
+  yield `data: ${JSON.stringify({
+    id,
+    object: "chat.completion.chunk",
+    created,
+    model,
+    choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
+  })}\n\n`;
+  yield `data: [DONE]\n\n`;
+}
 export async function forwardToUpstream(
   body: unknown
 ): Promise<{ status: number; json: unknown }> {

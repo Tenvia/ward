@@ -12,9 +12,13 @@ import { detectPressure, pressureReason } from "./detection.js";
 import {
   forwardToUpstream,
   mockChatCompletion,
+  mockStreamChatCompletion,
   upstreamModeEnabled,
 } from "./openaiProxy.js";
-import { controlAuthStatus, requireControlAuth } from "./controlAuth.js";
+import {
+  controlAuthStatus,
+  requireControlAuth,
+} from "./controlAuth.js";
 import { dockerRunnerStatus } from "./dockerRunner.js";
 import { mountOpenapiRoutes, openapiAvailable } from "./openapiRoutes.js";
 import { mountStaticUi, uiAvailable } from "./staticAssets.js";
@@ -226,6 +230,28 @@ app.post("/v1/chat/completions", async (req: Request, res: Response) => {
   }
 
   try {
+    const wantsStream = Boolean(
+      (req.body ?? ({} as { stream?: boolean })).stream
+    );
+    if (wantsStream) {
+      // Streaming is mock-only for this slice. forwardToUpstream
+      // does `await response.json()` and deadlocks on SSE; reject
+      // the upstream + stream combo before any other branch.
+      // Streaming also bypasses the pass-through branch entirely:
+      // a request with `stream: true` plus
+      // `WARD_UPSTREAM_OPENAI_BASE_URL` set receives the
+      // deterministic mock stream, NOT upstream pass-through.
+      res.status(200);
+      res.setHeader("content-type", "text/event-stream");
+      res.setHeader("cache-control", "no-cache");
+      res.setHeader("connection", "keep-alive");
+      res.flushHeaders?.();
+      for await (const chunk of mockStreamChatCompletion(req.body, tenantId)) {
+        res.write(chunk);
+      }
+      res.end();
+      return;
+    }
     if (upstreamModeEnabled()) {
       const { status, json } = await forwardToUpstream(req.body);
       res.status(status).json(json);

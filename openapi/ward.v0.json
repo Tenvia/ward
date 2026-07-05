@@ -3,7 +3,7 @@
   "info": {
     "title": "Ward API",
     "version": "0.1.0",
-    "description": "Ward is tenant containment for AI SaaS: an OpenAI-compatible egress\nproxy plus a tenant control plane. Route agent/tool calls through\nWard with a tenant ID header; operators constrain, pause, resume,\nand audit one tenant while the rest keep running.\n\nHTTP/OpenAPI is Ward's primary integration contract. This document\ndescribes the implemented v0 surface.\n\nHonesty notes (prototype status):\n- Control auth is a single shared bearer token (prototype), NOT\n  production RBAC. It guards mutating /ward/* routes only when\n  WARD_REQUIRE_CONTROL_TOKEN=true; read endpoints are open.\n- POST /v1/chat/completions is OpenAI-compatible enough for the\n  demo and simple integrations; it is not a full OpenAI spec clone\n  (no streaming, no tool-call passthrough guarantees in mock mode).\n- Workflow runners: mock is an implemented prototype; docker is a\n  dev-only prototype disabled by default; kubernetes is planned.\n- Single-node, prototype/demo-supported operation. Production\n  readiness is not claimed.\n"
+    "description": "Ward is tenant containment for AI SaaS: an OpenAI-compatible egress\nproxy plus a tenant control plane. Route agent/tool calls through\nWard with a tenant ID header; operators constrain, pause, resume,\nand audit one tenant while the rest keep running.\n\nHTTP/OpenAPI is Ward's primary integration contract. This document\ndescribes the implemented v0 surface.\n\nHonesty notes (prototype status):\n- Control auth is a single shared bearer token (prototype), NOT\n  production RBAC. It guards mutating /ward/* routes only when\n  WARD_REQUIRE_CONTROL_TOKEN=true; read endpoints are open.\n- POST /v1/chat/completions is OpenAI-compatible enough for the\n  demo and simple integrations; it is not a full OpenAI spec clone\n  (no tool-call passthrough guarantees in mock mode, no SSE\n  pass-through support; deterministic mock streaming only).\n  dev-only prototype disabled by default; kubernetes is planned.\n- Single-node, prototype/demo-supported operation. Production\n  readiness is not claimed.\n"
   },
   "servers": [
     {
@@ -84,10 +84,16 @@
         },
         "responses": {
           "200": {
-            "description": "Completion (mock or pass-through)",
+            "description": "Completion. If the request body has `stream: true`, the\nresponse is a deterministic mock SSE stream\n(content-type: text/event-stream). WardError responses\n(400, 423, 429, 502, 503) are always JSON.\n",
             "headers": {
               "x-ward-fail-open": {
                 "description": "Present (\"true\") only when the request was allowed via degraded fail-open",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "x-ward-would-block": {
+                "description": "Present (\"paused\" or \"constrained\") only when the\nrequest would have been blocked in enforce mode but\nwas allowed through in observe mode.\n",
                 "schema": {
                   "type": "string"
                 }
@@ -98,6 +104,12 @@
                 "schema": {
                   "$ref": "#/components/schemas/ChatCompletionResponse"
                 }
+              },
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "data: {\"id\":\"chatcmpl-mock-...\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Ward \"},\"finish_reason\":null}]}\n\ndata: [DONE]\n"
               }
             }
           },
@@ -1199,6 +1211,11 @@
                 }
               }
             }
+          },
+          "stream": {
+            "type": "boolean",
+            "default": false,
+            "description": "If true, Ward returns a deterministic mock SSE stream\n(text/event-stream). Streaming is mock-upstream only;\npass-through streaming is not yet supported. WardError\nresponses (400, 423, 429, 502, 503) are always JSON.\n"
           }
         },
         "additionalProperties": true

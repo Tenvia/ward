@@ -17,8 +17,8 @@ info:
       WARD_REQUIRE_CONTROL_TOKEN=true; read endpoints are open.
     - POST /v1/chat/completions is OpenAI-compatible enough for the
       demo and simple integrations; it is not a full OpenAI spec clone
-      (no streaming, no tool-call passthrough guarantees in mock mode).
-    - Workflow runners: mock is an implemented prototype; docker is a
+      (no tool-call passthrough guarantees in mock mode, no SSE
+      pass-through support; deterministic mock streaming only).
       dev-only prototype disabled by default; kubernetes is planned.
     - Single-node, prototype/demo-supported operation. Production
       readiness is not claimed.
@@ -72,15 +72,31 @@ paths:
               $ref: "#/components/schemas/ChatCompletionRequest"
       responses:
         "200":
-          description: Completion (mock or pass-through)
+          description: |
+            Completion. If the request body has `stream: true`, the
+            response is a deterministic mock SSE stream
+            (content-type: text/event-stream). WardError responses
+            (400, 423, 429, 502, 503) are always JSON.
           headers:
             x-ward-fail-open:
               description: Present ("true") only when the request was allowed via degraded fail-open
+              schema: { type: string }
+            x-ward-would-block:
+              description: |
+                Present ("paused" or "constrained") only when the
+                request would have been blocked in enforce mode but
+                was allowed through in observe mode.
               schema: { type: string }
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ChatCompletionResponse"
+            text/event-stream:
+              schema: { type: string }
+              example: |
+                data: {"id":"chatcmpl-mock-...","object":"chat.completion.chunk","choices":[{"index":0,"delta":{"content":"Ward "},"finish_reason":null}]}
+
+                data: [DONE]
         "400":
           description: Missing x-ward-tenant-id header
           content:
@@ -600,6 +616,14 @@ components:
             properties:
               role: { type: string }
               content: { type: string }
+        stream:
+          type: boolean
+          default: false
+          description: |
+            If true, Ward returns a deterministic mock SSE stream
+            (text/event-stream). Streaming is mock-upstream only;
+            pass-through streaming is not yet supported. WardError
+            responses (400, 423, 429, 502, 503) are always JSON.
       additionalProperties: true
 
     ChatCompletionResponse:
