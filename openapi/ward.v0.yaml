@@ -176,6 +176,11 @@ paths:
       tags: [tenants]
       operationId: constrainTenant
       summary: Constrain a tenant (direct; control auth when enabled)
+      description: |
+        Transitions the tenant running -> constrained (or returns
+        409 ward_invalid_transition if the current state precludes
+        this — for example, paused -> constrained is rejected by the
+        RC3 state-transition contract).
       security: [{ controlToken: [] }, {}]
       parameters: [{ $ref: "#/components/parameters/TenantIdPath" }]
       requestBody:
@@ -185,12 +190,17 @@ paths:
       responses:
         "200": { $ref: "#/components/responses/TransitionResult" }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "409": { $ref: "#/components/responses/TransitionRejected" }
 
   /ward/tenants/{tenantId}/pause:
     post:
       tags: [tenants]
       operationId: pauseTenant
       summary: Pause a tenant (direct; control auth when enabled)
+      description: |
+        Transitions the tenant running or constrained -> paused
+        (returns 409 if the tenant is already paused, or if any
+        transition-validation edge case hits).
       security: [{ controlToken: [] }, {}]
       parameters: [{ $ref: "#/components/parameters/TenantIdPath" }]
       requestBody:
@@ -200,12 +210,16 @@ paths:
       responses:
         "200": { $ref: "#/components/responses/TransitionResult" }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "409": { $ref: "#/components/responses/TransitionRejected" }
 
   /ward/tenants/{tenantId}/resume:
     post:
       tags: [tenants]
       operationId: resumeTenant
       summary: Resume a tenant (direct; control auth when enabled)
+      description: |
+        Transitions the tenant constrained or paused -> running
+        (returns 409 on same-state or contract rejections).
       security: [{ controlToken: [] }, {}]
       parameters: [{ $ref: "#/components/parameters/TenantIdPath" }]
       requestBody:
@@ -215,6 +229,7 @@ paths:
       responses:
         "200": { $ref: "#/components/responses/TransitionResult" }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "409": { $ref: "#/components/responses/TransitionRejected" }
 
   /ward/tenants/{tenantId}/mode:
     post:
@@ -279,6 +294,12 @@ paths:
       tags: [approvals]
       operationId: applyApprovedAction
       summary: Consume an approval token by echoing the exact phrase
+      description: |
+        Consumes a single-use approval token (single-use, TTL'd,
+        tenant+action-bound, exact phrase). The resulting tenant
+        transition is also validated against the RC3 state-transition
+        contract; a contract rejection returns 409 ward_invalid_transition
+        even when the approval token was valid.
       security: [{ controlToken: [] }, {}]
       parameters: [{ $ref: "#/components/parameters/TenantIdPath" }]
       requestBody:
@@ -294,6 +315,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/WardError" }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "409": { $ref: "#/components/responses/TransitionRejected" }
 
   /ward/workflow-runs:
     get:
@@ -485,6 +507,18 @@ components:
             properties:
               tenant: { $ref: "#/components/schemas/Tenant" }
               audit: { $ref: "#/components/schemas/AuditEvent" }
+    TransitionRejected:
+      description: |
+        Returned when a tenant transition is rejected by the RC3
+        state-transition contract. Body fields:
+          error:     "ward_invalid_transition"
+          message:   Human-readable description
+          rejection: "unsupported_transition" | "same_state" | "invalid_state"
+          from:      Current tenant state (null if the rejection is on the request body)
+          to:        Requested target state
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/TransitionRejection" }
 
   schemas:
     TenantState:
@@ -585,6 +619,28 @@ components:
       properties:
         actor: { type: string }
         reason: { type: string }
+
+    TransitionRejection:
+      description: |
+        Body of a 409 ward_invalid_transition response. `rejection`
+        discriminates the failure mode; `from` may be null when the
+        rejection was about an unrecognized state value in the request.
+      type: object
+      required: [error, message, rejection, from, to]
+      properties:
+        error:
+          type: string
+          enum: [ward_invalid_transition]
+        message: { type: string }
+        rejection:
+          type: string
+          enum: [unsupported_transition, same_state, invalid_state]
+        from:
+          oneOf:
+            - $ref: "#/components/schemas/TenantState"
+            - type: "null"
+        to:
+          $ref: "#/components/schemas/TenantState"
 
     WorkflowRunStatus:
       type: string

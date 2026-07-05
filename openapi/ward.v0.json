@@ -266,6 +266,7 @@
         ],
         "operationId": "constrainTenant",
         "summary": "Constrain a tenant (direct; control auth when enabled)",
+        "description": "Transitions the tenant running -> constrained (or returns\n409 ward_invalid_transition if the current state precludes\nthis — for example, paused -> constrained is rejected by the\nRC3 state-transition contract).\n",
         "security": [
           {
             "controlToken": []
@@ -292,6 +293,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "409": {
+            "$ref": "#/components/responses/TransitionRejected"
           }
         }
       }
@@ -303,6 +307,7 @@
         ],
         "operationId": "pauseTenant",
         "summary": "Pause a tenant (direct; control auth when enabled)",
+        "description": "Transitions the tenant running or constrained -> paused\n(returns 409 if the tenant is already paused, or if any\ntransition-validation edge case hits).\n",
         "security": [
           {
             "controlToken": []
@@ -329,6 +334,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "409": {
+            "$ref": "#/components/responses/TransitionRejected"
           }
         }
       }
@@ -340,6 +348,7 @@
         ],
         "operationId": "resumeTenant",
         "summary": "Resume a tenant (direct; control auth when enabled)",
+        "description": "Transitions the tenant constrained or paused -> running\n(returns 409 on same-state or contract rejections).\n",
         "security": [
           {
             "controlToken": []
@@ -366,6 +375,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "409": {
+            "$ref": "#/components/responses/TransitionRejected"
           }
         }
       }
@@ -482,6 +494,7 @@
         ],
         "operationId": "applyApprovedAction",
         "summary": "Consume an approval token by echoing the exact phrase",
+        "description": "Consumes a single-use approval token (single-use, TTL'd,\ntenant+action-bound, exact phrase). The resulting tenant\ntransition is also validated against the RC3 state-transition\ncontract; a contract rejection returns 409 ward_invalid_transition\neven when the approval token was valid.\n",
         "security": [
           {
             "controlToken": []
@@ -519,6 +532,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "409": {
+            "$ref": "#/components/responses/TransitionRejected"
           }
         }
       }
@@ -865,6 +881,16 @@
             }
           }
         }
+      },
+      "TransitionRejected": {
+        "description": "Returned when a tenant transition is rejected by the RC3\nstate-transition contract. Body fields:\n  error:     \"ward_invalid_transition\"\n  message:   Human-readable description\n  rejection: \"unsupported_transition\" | \"same_state\" | \"invalid_state\"\n  from:      Current tenant state (null if the rejection is on the request body)\n  to:        Requested target state\n",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/TransitionRejection"
+            }
+          }
+        }
       }
     },
     "schemas": {
@@ -1090,6 +1116,49 @@
           },
           "reason": {
             "type": "string"
+          }
+        }
+      },
+      "TransitionRejection": {
+        "description": "Body of a 409 ward_invalid_transition response. `rejection`\ndiscriminates the failure mode; `from` may be null when the\nrejection was about an unrecognized state value in the request.\n",
+        "type": "object",
+        "required": [
+          "error",
+          "message",
+          "rejection",
+          "from",
+          "to"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "enum": [
+              "ward_invalid_transition"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "rejection": {
+            "type": "string",
+            "enum": [
+              "unsupported_transition",
+              "same_state",
+              "invalid_state"
+            ]
+          },
+          "from": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/TenantState"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "to": {
+            "$ref": "#/components/schemas/TenantState"
           }
         }
       },

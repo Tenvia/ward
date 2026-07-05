@@ -2,10 +2,11 @@
 // and the operator approval flow. Prototype only — no production RBAC;
 // these endpoints are open on the local network.
 //
-// RC3 Slice 3: added POST /:tenantId/mode to set a per-tenant mode
-// override (inherit | observe | enforce). Override changes are audited
-// with action="mode_override_changed" carrying previousOverride and
-// nextOverride in evidence.
+// RC3 Slice 3: per-tenant mode override route (POST /:tenantId/mode).
+// RC3 Slice 4: explicit state transition contract enforced here.
+// applyTransition consults canTransitionTenantState before delegating
+// to setState. Rejected transitions return HTTP 409 with a clear
+// ward_invalid_transition error.
 import { Router } from "express";
 import type { Request, Response } from "express";
 import { logAudit } from "./audit.js";
@@ -20,9 +21,68 @@ import {
   setModeOverride,
   setState,
 } from "./tenantState.js";
-import type { ApprovableAction, TenantState } from "./types.js";
+import {
+  canTransitionTenantState,
+  explainRejection,
+  isValidWardState,
+} from "./stateTransitions.js";
+import type { ApprovableAction, AuditEvent, TenantRecord, TenantState } from "./types.js";
 
 export const tenantsRouter = Router();
+
+export interface ApplyTransitionInput {
+  tenantId: string;
+  action: ApprovableAction;
+  actor: string;
+  reason: string;
+  evidence?: Record<string, unknown>;
+}
+
+export interface ApplyTransitionSuccess {
+  ok: true;
+  tenant: TenantRecord | undefined;
+  audit: AuditEvent;
+  previous: TenantState;
+  next: TenantState;
+}
+
+export interface ApplyTransitionRejection {
+  ok: false;
+  tenant: TenantRecord | undefined;
+  audit: undefined;
+  previous: TenantState | null;
+  next: TenantState;
+  rejection:
+    | "same_state"
+    | "invalid_state"
+    | "unsupported_transition";
+  message: string;
+}
+
+export type ApplyTransitionResult =
+  | ApplyTransitionSuccess
+  | ApplyTransitionRejection;
+
+export class WardTransitionError extends Error {
+  public readonly rejection: "same_state" | "invalid_state" | "unsupported_transition";
+  public readonly from: TenantState | null;
+  public readonly to: TenantState | null;
+  public readonly tenantId: string;
+  constructor(input: {
+    tenantId: string;
+    rejection: ApplyTransitionRejection["rejection"];
+    from: TenantState | null;
+    to: TenantState;
+    message: string;
+  }) {
+    super(input.message);
+    this.name = "WardTransitionError";
+    this.rejection = input.rejection;
+    this.from = input.from;
+    this.to = input.to;
+    this.tenantId = input.tenantId;
+  }
+}
 
 // Express guarantees route params exist for matched routes;
 // noUncheckedIndexedAccess types them as string | undefined.
@@ -36,14 +96,32 @@ const ACTION_TO_STATE: Record<ApprovableAction, TenantState> = {
   resume: "running",
 };
 
-function applyTransition(input: {
-  tenantId: string;
-  action: ApprovableAction;
-  actor: string;
-  reason: string;
-  evidence?: Record<string, unknown>;
-}) {
-  const { previous, next } = setState(input.tenantId, ACTION_TO_STATE[input.action]);
+export function applyTransition(input: ApplyTransitionInput): ApplyTransitionResult {
+  const target = ACTION_TO_STATE[input.action];
+  // Ensure the tenant exists so we can read its current state for the
+  // contract check. Approval-flow callers pre-create the tenant; this
+  // is idempotent for an existing record.
+  const existing = getTenant(input.tenantId);
+  const isNew = !existing;
+  if (isNew) {
+    getOrCreateTenant(input.tenantId);
+  }
+  const current = (getTenant(input.tenantId)?.state ?? "running") as TenantState;
+
+  if (!canTransitionTenantState(current, target)) {
+    const detail = explainRejection(current, target);
+    return {
+      ok: false,
+      tenant: getTenant(input.tenantId),
+      audit: undefined,
+      previous: detail.from,
+      next: detail.to ?? target,
+      rejection: detail.reason,
+      message: detail.message,
+    };
+  }
+
+  const { previous, next } = setState(input.tenantId, target);
   const event = logAudit({
     tenantId: input.tenantId,
     action: input.action,
@@ -53,8 +131,19 @@ function applyTransition(input: {
     nextState: next,
     ...(input.evidence !== undefined ? { evidence: input.evidence } : {}),
   });
-  return { tenant: getTenant(input.tenantId), audit: event };
+  return {
+    ok: true,
+    tenant: getTenant(input.tenantId),
+    audit: event,
+    previous,
+    next,
+  };
 }
+
+// isValidWardState is re-exported from this module so callers can narrow
+// tenant state values at the boundary without reaching into
+// stateTransitions directly.
+export { isValidWardState as isValidTenantState };
 
 tenantsRouter.get("/", (_req: Request, res: Response) => {
   res.json({ tenants: listTenants() });
@@ -72,6 +161,20 @@ tenantsRouter.get("/:tenantId", (req: Request, res: Response) => {
   res.json({ tenant, pressure: detectPressure(tenant) });
 });
 
+function sendRejection(res: Response, rejection: ApplyTransitionRejection): void {
+  // 409 Conflict: the tenant's current state precludes this transition.
+  // 400 Bad Request: caller asserted a state that the request body or
+  // current tenant doesn't support.
+  const status = rejection.rejection === "invalid_state" ? 400 : 409;
+  res.status(status).json({
+    error: "ward_invalid_transition",
+    message: rejection.message,
+    rejection: rejection.rejection,
+    from: rejection.previous,
+    to: rejection.next,
+  });
+}
+
 function directTransition(action: ApprovableAction) {
   return (req: Request, res: Response) => {
     const { actor, reason } = (req.body ?? {}) as { actor?: string; reason?: string };
@@ -81,7 +184,11 @@ function directTransition(action: ApprovableAction) {
       actor: actor ?? "unknown",
       reason: reason ?? `Direct ${action} via API`,
     });
-    res.json(result);
+    if (!result.ok) {
+      sendRejection(res, result);
+      return;
+    }
+    res.json({ tenant: result.tenant, audit: result.audit });
   };
 }
 
@@ -150,7 +257,11 @@ tenantsRouter.post("/:tenantId/apply-approved-action", requireControlAuth, (req:
       approvedFlow: true,
     },
   });
-  res.json(result);
+  if (!result.ok) {
+    sendRejection(res, result);
+    return;
+  }
+  res.json({ tenant: result.tenant, audit: result.audit });
 });
 
 // RC3 Slice 3: per-tenant mode override. Body shape:
