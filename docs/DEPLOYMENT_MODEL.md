@@ -32,8 +32,8 @@ the Docker build. Verified end-to-end by
 ### 1c. Prebuilt image (prepared, inactive until first publish)
 
 `docker-compose.pull.yml` mirrors the user bundle against
-`ghcr.io/jenksed/ward-api` (current repo owner; would become
-`ghcr.io/10via/ward-api` if the repo moves to a company org), and
+`ghcr.io/tenvia/ward-api` (the Tenvia company org owns
+`github.com/Tenvia/ward`), and
 `.github/workflows/docker-image.yml` is ready to publish multi-arch
 images on version tags. No image has been published; users build
 locally via `docker-compose.user.yml` until then.

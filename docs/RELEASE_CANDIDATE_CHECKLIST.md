@@ -77,9 +77,8 @@ docker compose -f docker-compose.user.yml up --build
 
 ## Do-not-publish-unless gates
 
-- [ ] Repo owner confirmed — current: `jenksed`
-      (image: `ghcr.io/jenksed/ward-api`; future if moved to the
-      company org: `ghcr.io/10via/ward-api`)
+- [x] Repo owner confirmed — `Tenvia` org
+      (`github.com/Tenvia/ward`; image: `ghcr.io/tenvia/ward-api`)
 - [ ] GHCR package permissions confirmed for `GITHUB_TOKEN`
 - [ ] Image name confirmed
 - [ ] Version/tag confirmed (consider `v0.1.0-rc1` first)

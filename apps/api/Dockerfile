@@ -15,7 +15,7 @@ COPY apps/control-room/src ./src
 RUN npm run build
 
 FROM node:22-alpine
-LABEL org.opencontainers.image.source="https://github.com/jenksed/ward"
+LABEL org.opencontainers.image.source="https://github.com/Tenvia/ward"
 LABEL org.opencontainers.image.description="Ward tenant containment API and bundled Control Room"
 LABEL org.opencontainers.image.licenses="UNLICENSED"
 WORKDIR /app

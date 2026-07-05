@@ -11,18 +11,20 @@ registry yet.
 Owner decision (explicit):
 
 ```text
-Current repo owner:  jenksed
-Current GHCR target: ghcr.io/jenksed/ward-api
-Future company owner, if/when moved: ghcr.io/10via/ward-api
+Repo owner:  Tenvia (company org) — transferred from jenksed 2026-07-04
+GHCR target: ghcr.io/tenvia/ward-api
 ```
 
 - The Actions workflow derives the owner from
   `github.repository_owner`, so it publishes to
-  `ghcr.io/jenksed/ward-api` as long as the repo lives at
-  `github.com/jenksed/ward`. `docker-compose.pull.yml` defaults to
-  `ghcr.io/jenksed/ward-api:v0.1.0-rc1` (override with `WARD_IMAGE=`).
-  If the repo moves to a 10via org, only the compose default and docs
-  need updating — the workflow follows the repo automatically.
+  `ghcr.io/tenvia/ward-api` as long as the repo lives at
+  `github.com/Tenvia/ward` (metadata-action lowercases the org name).
+  `docker-compose.pull.yml` defaults to
+  `ghcr.io/tenvia/ward-api:v0.1.0-rc1` (override with `WARD_IMAGE=`).
+- Org-transfer note: publishing from an org repo may additionally
+  require the Tenvia org to allow GitHub Actions to create packages
+  (org settings -> packages / actions permissions). Check this before
+  the first workflow run.
 - First-publish visibility: GHCR packages created by a workflow are
   PRIVATE by default. Anonymous `docker pull` (and therefore the
   public pull-path docs) will not work until the package is made

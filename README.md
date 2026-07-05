@@ -69,7 +69,7 @@ curl only:
 ```
 
 A prebuilt-image path is prepared (`docker-compose.pull.yml`, target
-`ghcr.io/jenksed/ward-api`); no image is published yet, so build
+`ghcr.io/tenvia/ward-api`); no image is published yet, so build
 locally for now. Evaluating Ward? Start with the
 [design-partner quickstart](docs/DESIGN_PARTNER_QUICKSTART.md).
 
