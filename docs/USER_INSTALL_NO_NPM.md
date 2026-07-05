@@ -12,19 +12,21 @@ contract is HTTP + Docker; the TypeScript SDK is optional.
 Requirements: Docker (with Compose), curl for the smoke test.
 
 ```bash
-git clone <ward-repo>
+git clone https://github.com/Tenvia/ward
 cd ward
-docker compose -f docker-compose.user.yml up --build
+docker compose -f docker-compose.pull.yml up
 ```
 
-Open http://localhost:4317 — the Control Room is served by the API
-itself (one container, one port).
+This pulls the published image (`ghcr.io/tenvia/ward-api:v0.1.0-rc1`,
+public, no login needed). Open http://localhost:4317 — the Control
+Room is served by the API itself (one container, one port).
 
-Prebuilt image: `docker-compose.pull.yml` is prepared for the future
-published image (`ghcr.io/tenvia/ward-api`). No image is published
-yet — use the build path above until then. Note: the first published
-package may start private on GHCR and needs to be made public before
-anonymous pulls work.
+To build locally instead (no prebuilt image, still no NPM on your
+machine):
+
+```bash
+docker compose -f docker-compose.user.yml up --build
+```
 
 What you get:
 

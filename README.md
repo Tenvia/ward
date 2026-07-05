@@ -6,12 +6,12 @@
 
 **Pause one customer's AI agents. Everyone else keeps running.**
 
-[![release](https://img.shields.io/badge/release-v0.1.0--rc1_(prep)-1e56d6)](docs/releases/v0.1.0-rc1.md)
+[![release](https://img.shields.io/badge/release-v0.1.0--rc1-1e56d6)](docs/releases/v0.1.0-rc1.md)
 [![install](https://img.shields.io/badge/install-docker%2C_no_npm-2496ED?logo=docker&logoColor=white)](docs/USER_INSTALL_NO_NPM.md)
 [![contract](https://img.shields.io/badge/API-OpenAPI_v0-6BA539?logo=openapiinitiative&logoColor=white)](openapi/ward.v0.yaml)
 [![verification](https://img.shields.io/badge/release_battery-16%2F16-3fb950)](docs/BUILD_STATUS.md)
 [![status](https://img.shields.io/badge/status-prototype-d29922)](docs/CLAIMS_AND_EVIDENCE.md)
-[![license](https://img.shields.io/badge/license-pending-lightgrey)](docs/PUBLISH_READINESS.md)
+[![license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
 [Quickstart](docs/DESIGN_PARTNER_QUICKSTART.md) ·
 [Install (no NPM)](docs/USER_INSTALL_NO_NPM.md) ·
@@ -53,24 +53,26 @@ your SaaS ──(x-ward-tenant-id)──> Ward proxy ──> LLM / tool APIs
 - **No NPM for users** — one container serves API + Control Room.
 - The TypeScript SDK (cooperative `guard()`) is optional, never required.
 
-## Quickstart (no NPM)
+## Quickstart (no NPM, no build)
 
 ```bash
 git clone https://github.com/Tenvia/ward && cd ward
-docker compose -f docker-compose.user.yml up --build
+docker compose -f docker-compose.pull.yml up
 ```
 
-Open **http://localhost:4317** — Control Room, API, contract, SQLite
-persistence, demo control token `ward-demo-token`. Verify with Docker +
-curl only:
+This pulls the published image
+(`ghcr.io/tenvia/ward-api:v0.1.0-rc1`, public, amd64+arm64). Open
+**http://localhost:4317** — Control Room, API, contract, SQLite
+persistence, demo control token `ward-demo-token`.
+
+To build locally instead (contributors):
 
 ```bash
-./scripts/smoke-user-install.sh
+docker compose -f docker-compose.user.yml up --build
+./scripts/smoke-user-install.sh   # verify with Docker + curl only
 ```
 
-A prebuilt-image path is prepared (`docker-compose.pull.yml`, target
-`ghcr.io/tenvia/ward-api`); no image is published yet, so build
-locally for now. Evaluating Ward? Start with the
+Evaluating Ward? Start with the
 [design-partner quickstart](docs/DESIGN_PARTNER_QUICKSTART.md).
 
 ## Integrate your existing SaaS
@@ -114,9 +116,10 @@ Details and honest guarantees: [EXISTING_SAAS_INTEGRATION.md](docs/EXISTING_SAAS
 
 Not an APM tool. Not an agent framework. No Elixir. No Saastle (Ward
 runs fully standalone). **Not production-ready** — single-node,
-prototype/demo-supported, shared-token control auth prototype, no
-license file yet. Read the [claims ledger](docs/CLAIMS_AND_EVIDENCE.md)
-before repeating any claim.
+prototype/demo-supported, shared-token control auth prototype.
+Licensed [Apache-2.0](LICENSE). Read the
+[claims ledger](docs/CLAIMS_AND_EVIDENCE.md) before repeating any
+claim.
 
 ## Verification
 
@@ -173,7 +176,7 @@ cd apps/control-room && npm i && npm run dev             # UI  :5173
 | [CLAIMS_AND_EVIDENCE](docs/CLAIMS_AND_EVIDENCE.md) | The claims ledger — read this |
 | [BUILD_STATUS](docs/BUILD_STATUS.md) | What is verified, with evidence |
 | [RELEASE_CANDIDATE_CHECKLIST](docs/RELEASE_CANDIDATE_CHECKLIST.md) | v0.1.0 gates |
-| [PUBLISH_READINESS](docs/PUBLISH_READINESS.md) | First-publish procedure (not executed) |
+| [PUBLISH_READINESS](docs/PUBLISH_READINESS.md) | First-publish procedure (executed 2026-07-05) |
 | [STRATEGY_A_C_THEN_B](docs/STRATEGY_A_C_THEN_B.md) | Product strategy |
 | [SAASTLE_INTERNAL_APP_DIRECTION](docs/SAASTLE_INTERNAL_APP_DIRECTION.md) | Saastle's internal role |
 

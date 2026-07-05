@@ -1,14 +1,13 @@
-# Ward via a PREBUILT image — prepared for the future registry publish.
+# Ward via the PREBUILT image published to GHCR.
 #
-# STATUS: no image has been published yet. This file will work after
-# the first publish (see .github/workflows/docker-image.yml). Until
-# then, use docker-compose.user.yml, which builds locally:
-#
-#   docker compose -f docker-compose.user.yml up --build
-#
-# After publish, users run:
+# STATUS: ghcr.io/tenvia/ward-api:v0.1.0-rc1 is published (public,
+# linux/amd64 + linux/arm64) and this path is verified end to end:
 #
 #   docker compose -f docker-compose.pull.yml up
+#
+# To build locally instead (contributors, or to pin your own build):
+#
+#   docker compose -f docker-compose.user.yml up --build
 #
 # Same behavior as the user bundle: one container on 4317 serving API +
 # Control Room + OpenAPI contract, SQLite on a named volume, and the

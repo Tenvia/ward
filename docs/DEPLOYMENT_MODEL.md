@@ -29,14 +29,16 @@ the Docker build. Verified end-to-end by
 `./scripts/smoke-user-install.sh`. See
 `docs/USER_INSTALL_NO_NPM.md`.
 
-### 1c. Prebuilt image (prepared, inactive until first publish)
+### 1c. Prebuilt image (implemented prototype — published 2026-07-05)
 
 `docker-compose.pull.yml` mirrors the user bundle against
-`ghcr.io/tenvia/ward-api` (the Tenvia company org owns
-`github.com/Tenvia/ward`), and
-`.github/workflows/docker-image.yml` is ready to publish multi-arch
-images on version tags. No image has been published; users build
-locally via `docker-compose.user.yml` until then.
+`ghcr.io/tenvia/ward-api:v0.1.0-rc1` (public; Tenvia org owns
+`github.com/Tenvia/ward`), published by
+`.github/workflows/docker-image.yml` on the version tag
+(linux/amd64 + linux/arm64). Verified end to end: anonymous pull,
+boot, containment flow, control auth, and SQLite persistence across a
+container restart. `docker-compose.user.yml` remains the local-build
+path.
 
 ### 2. Docker Compose (implemented prototype)
 

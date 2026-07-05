@@ -1,7 +1,52 @@
 # Ward Build Status
 
-Last build session: 2026-07-05 (seventh session — roadmap + doc
-alignment; no code changes).
+Last build session: 2026-07-05 (eighth session — first image publish
+verified; docs updated to the pull path).
+
+## Eighth session (2026-07-05): first publish verified
+
+The `v0.1.0-rc1` tag was pushed (re-cut at `bca2396` after the
+seventh-session warning) and the docker-image workflow executed. The
+package was then made public and the pull path verified end to end
+from this machine, anonymously.
+
+Publish facts:
+
+- Image: `ghcr.io/tenvia/ward-api:v0.1.0-rc1` (+ `0.1.0-rc1`), public.
+- Digest `sha256:2c34f24799ec8260dbecb140d07d6c94b4bcecc96bc0e43aae2da84adc761cfd`;
+  OCI revision label `bca2396c…` (matches the annotated tag's target
+  and origin/main HEAD). linux/amd64 + linux/arm64 with provenance.
+- Workflow runs: 28724067337 (from the stale `bf63411` tag position,
+  superseded) and 28736769316 (authoritative). Tag-reuse deviation
+  recorded in `docs/PUBLISH_READINESS.md`; published tags are not
+  reused from this point on.
+
+Post-publish verification (all passed):
+
+| Check | Result |
+| --- | --- |
+| Anonymous GHCR token + tags/list + manifest | public; tags `0.1.0-rc1`, `v0.1.0-rc1`; OCI index with amd64+arm64 |
+| `docker compose -f docker-compose.pull.yml pull` + `up` (no registry login) | pulled and started |
+| `/health`, `/openapi.yaml`, Control Room at `/` | 200 / 200 / 200; sqlite storage, control auth required |
+| Containment sequence vs pulled image | Acme 200; missing header 400; unauthorized constrain 401; approval token + exact phrase applied; Globex 429; Acme still 200; audit populated |
+| Persistence across `docker compose restart` | Globex still 429, Acme 200; resume 200 |
+
+Docs updated this session: README (pull-path quickstart, release
+badge), `docker-compose.pull.yml` header, release notes (image
+section with digest + publish note), `docs/USER_INSTALL_NO_NPM.md`,
+`docs/DEPLOYMENT_MODEL.md` (mode 1c), `docs/PUBLISH_READINESS.md`
+(marked executed), claims ledger (published image + pull compose +
+workflow rows), `ROADMAP.md` Phase 0 checkboxes.
+
+Same-day addendum: Apache-2.0 chosen and committed — `LICENSE` at the
+repo root plus SPDX `"license": "Apache-2.0"` in all six package.json
+manifests and `tools/wardctl/pyproject.toml`; README badge and prose,
+release notes, and PUBLISH_READINESS updated. The already-published
+rc1 image predates the license file (empty licenses label); the next
+published tag picks it up automatically.
+
+Still open after this session: pass-through upstream untested, no
+streaming, single-node only, prototype auth.
 
 ## Seventh session (2026-07-05): roadmap and doc alignment
 
@@ -113,8 +158,8 @@ conformance smoke and validator are contributor tooling.
 
 ## Next build step
 
-Execute the first publish per `docs/PUBLISH_READINESS.md`: confirm
-owner/permissions, run the multi-arch build once locally, push a
-`v0.1.0-rc1` tag, let the prepared workflow publish, then verify the
-pull path (`docker-compose.pull.yml`) and anonymous pull. That is the
-last step between "credible evaluation" and "installable product".
+The first publish is done and verified, and the license (Apache-2.0)
+is committed — Phase 0 of `ROADMAP.md` is complete. Next: start
+Phase 1 with SSE streaming support and verified pass-through mode —
+the two blockers between "installable product" and "usable in a real
+egress path".

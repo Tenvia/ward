@@ -38,13 +38,15 @@ does not ship.
 
 Goal: turn "credible evaluation" into "installable product."
 
-- [ ] Choose and commit a license (blocks all adoption; the repo has no
-      license file today)
-- [ ] Re-cut `v0.1.0-rc1` at the intended commit (the local tag
-      currently points behind HEAD) and execute the first GHCR publish
-      per [docs/PUBLISH_READINESS.md](docs/PUBLISH_READINESS.md)
-- [ ] Verify the pull path (`docker-compose.pull.yml`) end to end,
-      including anonymous pull
+- [x] Choose and commit a license (Apache-2.0, SPDX `Apache-2.0` —
+      LICENSE + manifest fields added 2026-07-05)
+- [x] Re-cut `v0.1.0-rc1` at the intended commit and execute the first
+      GHCR publish per [docs/PUBLISH_READINESS.md](docs/PUBLISH_READINESS.md)
+      (published 2026-07-05: `ghcr.io/tenvia/ward-api:v0.1.0-rc1`,
+      public, amd64+arm64)
+- [x] Verify the pull path (`docker-compose.pull.yml`) end to end,
+      including anonymous pull (verified 2026-07-05: pull, boot,
+      containment flow, control auth, persistence across restart)
 - [x] Reconcile stale docs (removed leftover inherited-runtime framing;
       aligned ARCHITECTURE.md, OBJECTIONS.md, PRODUCT_SPINE.md, and
       INTEGRATION_MODEL.md with the claims ledger — 2026-07-05)
