@@ -11,7 +11,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 MODE="${1:-local}"
-IMAGE_NAME="${WARD_IMAGE_NAME:-ghcr.io/10via/ward-api}"
+IMAGE_NAME="${WARD_IMAGE_NAME:-ghcr.io/jenksed/ward-api}"
 TAG="${WARD_IMAGE_TAG:-dev}"
 
 case "$MODE" in

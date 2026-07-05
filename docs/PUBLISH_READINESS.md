@@ -8,10 +8,31 @@ registry yet.
 
 ## Target
 
-- Image: `ghcr.io/<owner>/ward-api` — placeholder owner is `10via` in
-  `docker-compose.pull.yml`; the Actions workflow uses
-  `github.repository_owner`. CONFIRM THE OWNER before publishing and
-  align the compose default if it differs.
+Owner decision (explicit):
+
+```text
+Current repo owner:  jenksed
+Current GHCR target: ghcr.io/jenksed/ward-api
+Future company owner, if/when moved: ghcr.io/10via/ward-api
+```
+
+- The Actions workflow derives the owner from
+  `github.repository_owner`, so it publishes to
+  `ghcr.io/jenksed/ward-api` as long as the repo lives at
+  `github.com/jenksed/ward`. `docker-compose.pull.yml` defaults to
+  `ghcr.io/jenksed/ward-api:v0.1.0-rc1` (override with `WARD_IMAGE=`).
+  If the repo moves to a 10via org, only the compose default and docs
+  need updating — the workflow follows the repo automatically.
+- First-publish visibility: GHCR packages created by a workflow are
+  PRIVATE by default. Anonymous `docker pull` (and therefore the
+  public pull-path docs) will not work until the package is made
+  public in GitHub package settings. Decide visibility deliberately.
+- `docker-compose.pull.yml` cannot be fully verified until the image
+  actually exists in GHCR.
+- License note: the repo currently has NO license file; the image is
+  labeled `org.opencontainers.image.licenses=UNLICENSED`. Do not
+  describe the package as open-source until a license is chosen and
+  committed.
 - Contents: API + bundled Control Room + OpenAPI contract (the same
   image `./scripts/build-image.sh local` produces).
 

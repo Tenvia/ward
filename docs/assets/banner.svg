@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="320" viewBox="0 0 1280 320" role="img" aria-label="Ward — tenant containment for AI SaaS">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#071633"/>
+      <stop offset="55%" stop-color="#0d2a66"/>
+      <stop offset="100%" stop-color="#1e56d6"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#58a6ff" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#58a6ff" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#58a6ff" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#3b6fe0" stroke-opacity="0.14" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1280" height="320" fill="url(#bg)"/>
+  <rect width="1280" height="320" fill="url(#grid)"/>
+
+  <!-- containment brackets around the wordmark -->
+  <g stroke="#58a6ff" stroke-width="6" fill="none" stroke-linecap="round" opacity="0.95">
+    <path d="M 396 96 h -44 v 128 h 44"/>
+    <path d="M 884 96 h 44 v 128 h -44"/>
+  </g>
+
+  <text x="640" y="178" text-anchor="middle"
+        font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+        font-size="104" font-weight="700" letter-spacing="26" fill="#f0f6ff">WARD</text>
+
+  <rect x="440" y="212" width="400" height="3" fill="url(#glow)"/>
+
+  <text x="640" y="252" text-anchor="middle"
+        font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+        font-size="22" letter-spacing="2" fill="#a8c4f5">Pause one customer's AI agents. Everyone else keeps running.</text>
+
+  <!-- tenant status dots: one contained, the rest running -->
+  <g>
+    <circle cx="574" cy="286" r="6" fill="#3fb950"/>
+    <circle cx="606" cy="286" r="6" fill="#3fb950"/>
+    <circle cx="638" cy="286" r="6" fill="#f85149"/>
+    <circle cx="670" cy="286" r="6" fill="#3fb950"/>
+    <circle cx="702" cy="286" r="6" fill="#3fb950"/>
+  </g>
+</svg>

@@ -21,8 +21,10 @@ Open http://localhost:4317 — the Control Room is served by the API
 itself (one container, one port).
 
 Prebuilt image: `docker-compose.pull.yml` is prepared for the future
-published image (`ghcr.io/10via/ward-api`). No image is published yet
-— use the build path above until then.
+published image (`ghcr.io/jenksed/ward-api`). No image is published
+yet — use the build path above until then. Note: the first published
+package may start private on GHCR and needs to be made public before
+anonymous pulls work.
 
 What you get:
 

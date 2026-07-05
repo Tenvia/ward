@@ -15,7 +15,9 @@
 # minimal shared-token control auth prototype (demo token — change it).
 services:
   ward:
-    image: "${WARD_IMAGE:-ghcr.io/10via/ward-api:latest}"
+    # Current repo owner is jenksed; if Ward moves to a 10via GitHub
+    # org later, the image becomes ghcr.io/10via/ward-api.
+    image: "${WARD_IMAGE:-ghcr.io/jenksed/ward-api:v0.1.0-rc1}"
     ports:
       - "4317:4317"
     environment:
