@@ -10,6 +10,7 @@
   "scripts": {
     "validate:openapi": "node scripts/validate-openapi.mjs",
     "smoke:openapi": "node scripts/smoke-openapi-conformance.mjs",
+    "bench:latency": "node scripts/bench-latency.mjs",
     "smoke:pass-through:mock": "node scripts/smoke-pass-through-mock.mjs",
     "smoke:streaming:mock": "node scripts/smoke-streaming-mock.mjs",
     "smoke:observe-only": "node scripts/smoke-observe-only.mjs",
