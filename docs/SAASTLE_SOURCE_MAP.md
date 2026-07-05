@@ -1,9 +1,19 @@
-# Saastle Source Map
+# Saastle Source Map (HISTORICAL — internal reference)
 
 > Saastle is read-only source material for Ward. This document records, for
 > each Saastle source inspected, what Ward can inherit, what claim it
 > supports, and what caveat applies. Nothing in this file authorizes writing
 > to the Saastle repo.
+
+> **Historical status note.** This map was written when Ward planned to
+> inherit Saastle's Elixir/BEAM engine. That plan changed: Ward is a
+> standalone TypeScript service with no Saastle code or runtime
+> dependency (see `docs/ARCHITECTURE.md`). Statements below about Ward
+> "inheriting the runtime engine" or "depending on this engine" are
+> historical and no longer true — what Ward ultimately inherited is
+> design patterns and evidence discipline (e.g. the confirmation-token
+> approval pattern, the claims-ledger methodology, the Acme/Globex
+> demo narrative), all reimplemented natively.
 
 ## Status vocabulary
 

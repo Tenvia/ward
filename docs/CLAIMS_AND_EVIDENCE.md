@@ -1,8 +1,8 @@
 # Ward Claims and Evidence
 
 This document maps every public Ward claim to specific evidence, using
-the same status vocabulary Saastle uses (see
-`docs/SAASTLE_SOURCE_MAP.md`).
+the status vocabulary below (methodology historically inherited from
+internal 10via practice; see `docs/SAASTLE_SOURCE_MAP.md`).
 
 ## Status vocabulary
 
@@ -29,7 +29,7 @@ the same status vocabulary Saastle uses (see
 | In-memory audit trail | prototype | `apps/api/src/audit.ts` — approvals, transitions, pressure detections, workflow-run events. Lost on restart. `GET /ward/audit`. |
 | Node/Express existing-SaaS demo | prototype, demo-supported | `examples/node-express-ai-saas/` — only Ward-specific code is a base URL + tenant header (`src/wardClient.ts`). Globex's loop is a real repeated call pattern. |
 | React control room | prototype, demo-supported (browser-tested) | `apps/control-room/` — tenant list/detail, incidents, workflow runs, approval flow, direct actions, audit timeline, deployment-mode badge. Playwright E2E (`apps/control-room/tests/demo.spec.ts`) drives the full containment flow in Chromium and passes. |
-| Automated smoke demo | prototype | `scripts/smoke-demo.mjs` (`npm run smoke:demo`) — 16 checks covering the whole containment sequence, including negative cases. Passing against both local and Docker Compose stacks. |
+| Automated smoke demo | prototype | `scripts/smoke-demo.mjs` (`npm run smoke:demo`) — covers the whole containment sequence, including negative cases (18 checks at last count; the script prints its own total). Passing against both local and Docker Compose stacks. |
 | Durable tenant state (SQLite) | prototype | `apps/api/src/storage/` — `WARD_STORAGE=sqlite` persists tenant records via Node's built-in `node:sqlite` (experimental in Node 22). Restart persistence verified: state, counters, and enforcement survive a process kill. Memory remains the default. |
 | Durable audit (SQLite) | prototype | Same backend; audit events rehydrate on boot and the id sequence continues. Not compliance-grade retention — a prototype persistence path only. |
 | docker-agent image builds and runs | prototype | `examples/docker-agent/` — image builds; agent routes calls through Ward and stops on 423/429. |
@@ -38,9 +38,9 @@ the same status vocabulary Saastle uses (see
 | Proxy degraded fail-open | prototype | `WARD_PROXY_FAIL_MODE` in `apps/api/src/server.ts`: policy-lookup failure with mode open allows the request with `x-ward-fail-open: true` + `proxy_fail_open` audit event; closed blocks 503. Successful policy reads always enforce (constrained tenant stays 429). Verified by `npm run smoke:reliability` (13/13) using the test-only `WARD_TEST_FORCE_POLICY_ERROR` flag. |
 | Shared-token control auth | prototype | `apps/api/src/controlAuth.ts` — single static bearer token guards all mutating `/ward/*` routes when `WARD_REQUIRE_CONTROL_TOKEN=true`; reads stay open; `/health` warns loudly when disabled. Not production RBAC. Verified by `npm run smoke:reliability`. |
 | SQLite persistence in Docker Compose | prototype, demo-supported | Compose defaults to `WARD_STORAGE=sqlite` on the `ward-data` named volume. Verified: constrain survived an API-only container restart (429 before and after, audit intact); volume survives `docker compose down` (without `-v`). |
-| No-NPM user Docker path | prototype, demo-supported | `docker-compose.user.yml` — one container, port 4317, SQLite volume, demo control token. Verified by `./scripts/smoke-user-install.sh` (15/15, docker + curl only; no NPM invoked). |
+| No-NPM user Docker path | prototype, demo-supported | `docker-compose.user.yml` — one container, port 4317, SQLite volume, demo control token. Verified by `./scripts/smoke-user-install.sh` (all checks passing; docker + curl only, no NPM invoked). |
 | API-served Control Room bundle | prototype, demo-supported | Multi-stage `apps/api/Dockerfile` builds the UI and the API serves it at `/` (`apps/api/src/staticAssets.ts`); `/` returns a clear JSON explanation when assets are missing. `/health` reports `controlRoomBundled`. |
-| Shell-based no-NPM smoke test | prototype | `scripts/smoke-user-install.sh` — 15 checks incl. bundled UI, auth 401/200, containment, and SQLite persistence across container restart. |
+| Shell-based no-NPM smoke test | prototype | `scripts/smoke-user-install.sh` — checks incl. bundled UI, auth 401/200, containment, and SQLite persistence across container restart (16 checks at last count; the script prints its own total). |
 | uv/uvx wardctl helper | prototype | `tools/wardctl` — stdlib-only Python CLI (`health`, `tenants`, `tenant`, `constrain`, `pause`, `resume`, `audit`, `runs`) honoring `WARD_API_URL`/`WARD_CONTROL_TOKEN`. Verified via `uv run` and `uvx --from ./tools/wardctl` against a live auth-enabled API. |
 | Control Room auth flow in browser | prototype, demo-supported | `apps/control-room/tests/demo-auth.spec.ts` — Playwright drives the approval/constrain flow with `WARD_REQUIRE_CONTROL_TOKEN=true`; unauthenticated mutation 401s, UI mutations succeed with the token; passing. |
 | Fail-closed Compose example | prototype | `docker-compose.fail-closed.yml` overlay for the user bundle (`WARD_PROXY_FAIL_MODE=closed`); merged config validated. Runtime fail-closed behavior itself is verified by `npm run smoke:reliability`. |
@@ -101,6 +101,7 @@ the same status vocabulary Saastle uses (see
 This document is reviewed before any public claim ships and updated
 when a claim's status changes. A claim at "planned" must never appear
 in `README.md` without "planned" or "future" language. Automated
-coverage today is one Playwright E2E and the 16-check smoke script —
-enough for "demo-supported", not enough to label anything "tested" in
-the unit/integration sense.
+coverage today is two Playwright E2Es and the smoke battery in
+`scripts/` (each script prints its own check count) — enough for
+"demo-supported", not enough to label anything "tested" in the
+unit/integration sense.

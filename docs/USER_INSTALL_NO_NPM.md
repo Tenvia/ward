@@ -71,9 +71,10 @@ In the Control Room, paste the control token into the header field
 ./scripts/smoke-user-install.sh
 ```
 
-15 checks: compose validity, health, bundled UI at `/`, tenant
-containment with the Bearer token, 401 without it, audit, and SQLite
-persistence across a container restart. Uses docker + curl only.
+The script checks compose validity, health, the bundled UI at `/`,
+tenant containment with the Bearer token, 401 without it, audit, and
+SQLite persistence across a container restart, and prints its own
+pass/fail count. Uses docker + curl only.
 
 ## Fail-closed variant
 

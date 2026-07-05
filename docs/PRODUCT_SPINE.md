@@ -20,38 +20,46 @@ single line of the customer's application code into a new runtime.
 
 - Not an agent framework.
 - Not APM or generic observability.
+- Not a generic AI gateway.
 - Not a plugin marketplace.
 - Not a Kubernetes replacement.
 - Not something you run your app inside.
 - Not a claim of full agent safety, full multi-node isolation, or
   guaranteed runaway-cost prevention.
 
-## The internal engine
+## The control plane
 
-The Elixir/BEAM runtime (inherited from Saastle, see
-`docs/SAASTLE_SOURCE_MAP.md`) is Ward's internal control-plane engine. It
-runs a shadow runtime per tenant and holds tenant state:
+Ward is a standalone TypeScript service (`apps/api`) — no external
+runtime, no Saastle dependency. It holds per-tenant state:
 
 - running
 - constrained
 - paused
-- recovering
 
 The customer's application stays in Node, Python, Ruby, Rails, Django,
-Laravel, Phoenix, or whatever it already runs on. The customer never adopts
-BEAM, never touches Elixir, and never sees the runtime engine directly.
+Laravel, Phoenix, or whatever it already runs on. Integration is HTTP:
+a base-URL change plus a tenant header, per `openapi/ward.v0.yaml`
+(served by every running Ward at `GET /openapi.yaml`).
 
-## The three chokepoints
+The wedge is the triad no adjacent tool provides together: **tenant
+state + operator approval + containment receipt (audit evidence)** at
+an enforcement chokepoint.
 
-Existing SaaS apps integrate through one or more of:
+## The chokepoints
 
-1. LLM/tool egress proxy (Tier 1 — ships first).
-2. TypeScript SDK guard/lease primitive (Tier 2).
-3. Queue middleware (Tier 3 — later).
+Existing SaaS apps integrate through one or more of (statuses per
+`docs/CLAIMS_AND_EVIDENCE.md`):
+
+1. LLM/tool egress proxy — implemented prototype; ships first.
+2. TypeScript SDK guard (`ward.guard()`) — implemented prototype,
+   cooperative containment only.
+3. Workflow runners — mock runner implemented; Docker runner is a
+   dev-only prototype (disabled by default); Kubernetes runner planned.
+4. Queue middleware — planned, not started.
 
 See `docs/INTEGRATION_MODEL.md` for the full breakdown and
-`docs/architecture.md` for how each chokepoint talks to the internal
-engine.
+`docs/ARCHITECTURE.md` for how each chokepoint talks to the control
+plane.
 
 ## First buyer
 
@@ -71,16 +79,17 @@ A normal Node/Express SaaS app with two tenants:
 - Acme = healthy tenant.
 - Globex = tenant with a runaway AI/tool loop.
 
-See `docs/DEMO_SCRIPT.md` for the full script.
+See `docs/DEMO_SCRIPT.md` for the full script and
+`examples/node-express-ai-saas/` for the implementation.
 
 ## Guarantee ladder (summary)
 
-| Mode | Integration | Enforcement strength |
-| --- | --- | --- |
-| Native Saastle runtime mode | Tenant work runs inside Saastle supervision | Strongest containment |
-| Proxy mode | LLM/tool/API calls route through Ward | Hard containment at egress |
-| SDK guard mode | Existing app asks Ward before work iterations | Cooperative containment |
-| Queue middleware mode | Worker asks Ward before dequeuing tenant jobs | Future background-work containment |
+| Mode | Integration | Enforcement strength | Status |
+| --- | --- | --- | --- |
+| Proxy mode | LLM/tool/API calls route through Ward | Hard containment at egress for proxied calls | implemented prototype |
+| SDK guard mode | Existing app asks Ward before work iterations | Cooperative containment | implemented prototype |
+| Workflow runners | Ward launches the work | Process-level containment | mock prototype; Docker dev-only; K8s planned |
+| Queue middleware mode | Worker asks Ward before dequeuing tenant jobs | Background-work containment | planned |
 
 Full detail, including what is NOT enforced per mode, lives in
 `docs/INTEGRATION_MODEL.md`.
@@ -91,7 +100,8 @@ Lead with: pause one customer's AI agents, everyone else keeps running,
 existing SaaS integration, base URL change, tenant ID header, operator
 approval, audit trail, guarantee ladder.
 
-Do not lead with: BEAM, Elixir, generic control plane language, generic
-observability, plugin marketplace, multi-node placement, platform language.
+Do not lead with: generic control plane language, generic observability,
+plugin marketplace, multi-node placement, platform language, or any
+claim not backed by `docs/CLAIMS_AND_EVIDENCE.md`.
 
 See `docs/NAMING_AND_POSITIONING.md` for the full approved/avoid list.

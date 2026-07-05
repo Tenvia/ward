@@ -26,7 +26,7 @@ bundled Control Room served at `/`, SQLite on the `ward-user-data`
 volume, and the shared-token control auth prototype enabled with a
 demo token. No NPM on the user's machine — Node/Vite run only inside
 the Docker build. Verified end-to-end by
-`./scripts/smoke-user-install.sh` (15 checks). See
+`./scripts/smoke-user-install.sh`. See
 `docs/USER_INSTALL_NO_NPM.md`.
 
 ### 1c. Prebuilt image (prepared, inactive until first publish)

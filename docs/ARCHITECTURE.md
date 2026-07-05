@@ -6,11 +6,12 @@ Ward is a standalone TypeScript control plane for tenant containment.
 Customer applications never run inside Ward. They interact with it
 through chokepoints: an OpenAI-compatible egress proxy (implemented
 prototype), a cooperative SDK guard (implemented prototype), workflow
-runners (mock implemented; Docker/Kubernetes planned adapters), and
-queue middleware (planned). Earlier drafts described an inherited
-Elixir/BEAM engine; Ward now implements its containment primitives
-natively in TypeScript, with the Saastle work retained as evidence and
-pattern source only (see `docs/SAASTLE_SOURCE_MAP.md`).
+runners (mock implemented; Docker dev-only prototype, disabled by
+default; Kubernetes planned), and queue middleware (planned).
+Historical note: earlier drafts described an inherited Elixir/BEAM
+engine; Ward implements its containment primitives natively in
+TypeScript, and the Saastle work is retained as historical evidence
+and pattern source only (see `docs/SAASTLE_SOURCE_MAP.md`).
 
 ## Components
 
@@ -30,10 +31,12 @@ examples/docker-agent          Reference agent container
 | `tenantState.ts` | Per-tenant state: running / constrained / paused, counters, spend estimate | implemented prototype (in-memory) |
 | `detection.ts` | Sliding-window pressure detection (flags, never auto-constrains) | implemented prototype |
 | `approvals.ts` | Single-use, short-TTL, tenant+action-bound approval tokens with exact confirmation phrase | implemented prototype (in-memory) |
-| `audit.ts` | Audit trail for every approval, transition, block, and detection | implemented prototype (in-memory, not durable) |
+| `audit.ts` | Audit trail for every approval, transition, block, and detection | implemented prototype (in-memory by default; SQLite persistence prototype via `storage/`) |
 | `workflowRuns.ts` | Workflow-run store + runner dispatch + containment rules | implemented prototype |
-| `dockerRunner.ts` | Docker agent runner adapter | planned (stub) |
+| `dockerRunner.ts` | Docker agent runner adapter | dev-only prototype (disabled by default; allowlisted images) |
 | `k8sRunner.ts` | Kubernetes agent runner adapter | planned (stub) |
+| `storage/` | SQLite persistence (`WARD_STORAGE=sqlite`) for tenant state + audit | prototype (memory remains the default) |
+| `controlAuth.ts` | Shared-token control auth on mutating `/ward/*` routes | prototype (not production RBAC) |
 
 The approval flow is a native reimplementation of Saastle's
 confirmation-token pattern (single-use, short-lived, bound to tenant
@@ -46,7 +49,7 @@ involved.
 | --- | --- | --- | --- |
 | Egress proxy | Base URL + `x-ward-tenant-id` header | Hard containment at egress for proxied calls | implemented prototype |
 | SDK guard | `ward.guard({ tenantId, operation, run })` | Cooperative — code that bypasses the guard is not contained | implemented prototype |
-| Docker/K8s runners | Ward launches the agent workload | Process-level (planned) | planned adapters |
+| Docker/K8s runners | Ward launches the agent workload | Process-level | Docker: dev-only prototype (disabled by default); K8s: planned |
 | Queue middleware | Worker asks Ward before dequeuing | Background-work containment | planned |
 
 ## Data flow: the demo path
@@ -75,18 +78,32 @@ Acme.
   run; only new runs are blocked. Mid-run revocation arrives with the
   real runner adapters.
 
-## Fail-open requirement
+## Fail-open behavior (implemented prototype, with one honest gap)
 
-Ward must never become the outage: if Ward is unreachable, customer
-apps should fail open (call upstream directly / proceed). This is NOT
-implemented or verified yet — the demo app simply errors if Ward is
-down. No fail-open claim ships until this is built and tested.
+Ward must never become the outage. What exists today, verified per
+`docs/CLAIMS_AND_EVIDENCE.md`:
+
+- **SDK guard fail-open/fail-closed** — if Ward cannot answer,
+  `guard()` failMode `open` (default) runs the callback and reports
+  `fail_open` (never silently); `closed` refuses. Verified by
+  `npm run smoke:sdk`.
+- **Proxy degraded fail-open** — policy-lookup fault with the API up:
+  `WARD_PROXY_FAIL_MODE=open` (default) allows the request with an
+  `x-ward-fail-open: true` header plus an audit event; `closed`
+  blocks 503. A successful policy read always enforces. Verified by
+  `npm run smoke:reliability`.
+- **Proxy hard-down — NOT solved.** If the Ward process/network is
+  fully down, proxied traffic does not flow. Customer-side fallback
+  routing or an HA Ward deployment is required; neither exists yet,
+  and no claim ships until it does.
 
 ## Out of scope today
 
-- Durable state and audit (all in-memory, lost on restart).
-- Auth/RBAC on control endpoints (open on the local network).
+- Production-grade durable state and audit (SQLite persistence is a
+  prototype; approval tokens and workflow runs stay in-memory; no
+  retention policy or export).
+- Production auth/RBAC (only the shared-token prototype exists).
 - Real dollar metering (`estimatedSpend` is a fixed per-call rate).
-- Multi-node/multi-replica deployment (blocked on durable state).
+- Multi-node/multi-replica deployment (blocked on durable shared state).
 - Tool sandboxing and prompt-injection detection — not part of Ward's
   containment claim.

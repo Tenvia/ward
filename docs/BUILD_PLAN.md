@@ -1,4 +1,12 @@
-# Ward Build Plan
+# Ward Build Plan (HISTORICAL — superseded)
+
+> **Historical document.** This was the original two-week build plan,
+> written when Ward intended to inherit Saastle's Elixir/BEAM engine.
+> Ward was instead built as a standalone TypeScript service with no
+> Saastle dependency (see `docs/ARCHITECTURE.md`), and the plan below
+> was superseded by the shipped rc1 scope. Current direction lives in
+> `ROADMAP.md`; current status lives in `docs/BUILD_STATUS.md` and
+> `docs/CLAIMS_AND_EVIDENCE.md`. Nothing below is a current claim.
 
 ## Summary
 

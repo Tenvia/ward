@@ -15,16 +15,15 @@
 
 > Globex was contained. Acme never blipped.
 
-## Relationship to Saastle
+## Relationship to Saastle (historical/internal context)
 
-Ward's internal control-plane engine is built on the same Elixir/BEAM
-runtime as Saastle (see `docs/SAASTLE_SOURCE_MAP.md`). Ward is a distinct
-product surface: it never asks a customer to adopt BEAM, never leads with
-Saastle's category language ("tenant runtime control plane"), and exposes
-containment exclusively through an egress proxy and an SDK guard/lease
-primitive. This document intentionally diverges from
-`saastle/docs/TERMINOLOGY.md` and `saastle/docs/CATEGORY_POSITIONING.md` —
-do not import Saastle's approved-phrase list into Ward material.
+Ward is a standalone TypeScript product with no Saastle code or runtime
+dependency. The Saastle work is a historical design/pattern source only
+(recorded in `docs/SAASTLE_SOURCE_MAP.md`); Saastle itself is 10via's
+internal operations app (`docs/SAASTLE_INTERNAL_APP_DIRECTION.md`).
+Ward never leads with Saastle's category language ("tenant runtime
+control plane") and does not import Saastle's approved-phrase list
+into Ward material.
 
 ## Language rules
 
@@ -41,8 +40,6 @@ do not import Saastle's approved-phrase list into Ward material.
 
 ### Do not lead with
 
-- BEAM
-- Elixir
 - generic control plane language
 - generic observability
 - plugin marketplace
@@ -53,7 +50,7 @@ do not import Saastle's approved-phrase list into Ward material.
 
 | Weak or risky framing | Better Ward framing |
 | --- | --- |
-| "Runs on our BEAM control plane" | "Integrates in minutes with a base-URL change" |
+| "Runs on our control-plane platform" | "Integrates in minutes with a base-URL change" |
 | "Tenant runtime control plane" | "Per-customer kill switch for AI agents" |
 | "AI agent platform" | "Containment layer around your existing agents" |
 | "Observability for AI spend" | "Real per-tenant call and spend metering, with an operator lever attached" |
@@ -62,8 +59,8 @@ do not import Saastle's approved-phrase list into Ward material.
 ## First buyer
 
 CTO / VP Eng at a 10-100 person B2B SaaS with tenant-scoped AI agents, on a
-Node/Python/Ruby stack — not Elixir, that is the point. See
-`docs/PRODUCT_SPINE.md` for the full buyer profile.
+Node/Python/Ruby stack. Ward integrates over HTTP, so the buyer's stack
+does not matter. See `docs/PRODUCT_SPINE.md` for the full buyer profile.
 
 ## Claim discipline
 

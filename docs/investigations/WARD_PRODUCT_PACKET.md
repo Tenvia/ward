@@ -1,4 +1,10 @@
-# Ward Product Packet
+# Ward Product Packet (HISTORICAL — investigation artifact)
+
+> **Historical document.** This packet predates the standalone
+> TypeScript implementation; references to an Elixir/BEAM runtime or
+> inherited engine are historical and no longer true (see
+> `docs/ARCHITECTURE.md`). Current positioning: `docs/PRODUCT_SPINE.md`
+> and `ROADMAP.md`. Nothing below is a current claim.
 
 ## Summary
 

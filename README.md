@@ -121,13 +121,13 @@ before repeating any claim.
 ## Verification
 
 ```bash
-./scripts/verify-release.sh    # full battery: 16 sections (maintainers)
+./scripts/verify-release.sh    # full release battery (maintainers)
 npm run validate:openapi       # contract structure
 npm run smoke:openapi          # live responses conform to the contract
-npm run smoke:demo             # 18-check containment demo
+npm run smoke:demo             # end-to-end containment demo
 npm run smoke:sdk              # SDK guard + fail modes
 npm run smoke:reliability      # fail-open/closed + control auth
-./scripts/smoke-user-install.sh          # 16-check no-NPM user path
+./scripts/smoke-user-install.sh          # no-NPM user path (docker + curl)
 cd apps/control-room && npm run test:e2e && npm run test:e2e:auth
 ```
 
@@ -169,6 +169,7 @@ cd apps/control-room && npm i && npm run dev             # UI  :5173
 | [DOCKER_RUNBOOK](docs/DOCKER_RUNBOOK.md) | Compose stacks + Docker runner |
 | [ARCHITECTURE](docs/ARCHITECTURE.md) | Control plane and chokepoints |
 | [KUBERNETES_PLAN](docs/KUBERNETES_PLAN.md) | Planned K8s shape |
+| [ROADMAP](ROADMAP.md) | Phased roadmap, honest statuses |
 | [CLAIMS_AND_EVIDENCE](docs/CLAIMS_AND_EVIDENCE.md) | The claims ledger — read this |
 | [BUILD_STATUS](docs/BUILD_STATUS.md) | What is verified, with evidence |
 | [RELEASE_CANDIDATE_CHECKLIST](docs/RELEASE_CANDIDATE_CHECKLIST.md) | v0.1.0 gates |

@@ -1,7 +1,51 @@
 # Ward Build Status
 
-Last build session: 2026-07-04 (sixth session — v0.1.0
-release-candidate hardening).
+Last build session: 2026-07-05 (seventh session — roadmap + doc
+alignment; no code changes).
+
+## Seventh session (2026-07-05): roadmap and doc alignment
+
+Docs-only session. No code, contract, script, or compose changes; no
+tag, publish, push, or registry action.
+
+- Added `ROADMAP.md` (phased roadmap; wedge = tenant state + operator
+  approval + containment receipt; explicit not-a-gateway /
+  not-observability / not-a-framework boundaries).
+- Removed stale Elixir/BEAM/inherited-runtime/shadow-runtime framing
+  from current-facing docs: rewrote `docs/PRODUCT_SPINE.md`,
+  `docs/INTEGRATION_MODEL.md` (dropped "Native Saastle runtime mode"
+  from the guarantee ladder), `docs/OBJECTIONS.md`, and the
+  "Relationship to Saastle" section of
+  `docs/NAMING_AND_POSITIONING.md` to match the standalone TypeScript
+  reality.
+- Marked historical documents as historical with banners:
+  `docs/BUILD_PLAN.md` (superseded by ROADMAP),
+  `docs/SAASTLE_SOURCE_MAP.md` (engine-inheritance statements no
+  longer true), `docs/investigations/WARD_PRODUCT_PACKET.md`.
+- Synced `docs/ARCHITECTURE.md` with the claims ledger: fail-open
+  section now reflects the verified SDK/proxy-degraded behavior (and
+  the unsolved hard-down gap), Docker runner marked dev-only
+  prototype, storage/control-auth rows added, out-of-scope list
+  updated.
+- Rewrote `docs/DEMO_SCRIPT.md` for upstream honesty: the verified
+  demo uses the mock upstream; pass-through remains untested;
+  narration lines updated (SQLite audit prototype, degraded fail-open
+  vs hard-down).
+- Normalized smoke-check counts. Static ground truth:
+  `scripts/smoke-demo.mjs` has 18 checks, `scripts/smoke-user-install.sh`
+  has 16 (both match the recorded sixth-session battery results);
+  stale 15/16-check references in CLAIMS_AND_EVIDENCE,
+  USER_INSTALL_NO_NPM, and DEPLOYMENT_MODEL were corrected or replaced
+  with "the script prints its own count".
+- Observation for the publish step: a local git tag `v0.1.0-rc1`
+  exists but points behind HEAD (`bf63411` vs `9b862ff`, the Tenvia
+  org-alignment commits). Re-cut the tag at the intended commit before
+  the first publish; `docs/PUBLISH_READINESS.md` applies.
+- Verification run this session: `npm run validate:openapi` (pass) and
+  stale-term greps (see below). The full release battery, smokes, and
+  E2Es were NOT re-run — no code changed.
+
+## Sixth session (2026-07-04): v0.1.0 release-candidate hardening
 
 ## Summary
 
