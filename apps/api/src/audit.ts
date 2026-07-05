@@ -1,6 +1,12 @@
 // Audit trail: in-process array with write-through to the configured
 // storage backend. Memory backend (default): lost on restart. SQLite
 // backend: events are rehydrated on boot (prototype persistence).
+//
+// RC3 Slice 1: every emitted event carries schemaVersion: 1 so later
+// slices (and external readers) can detect the event shape. The
+// OpenAPI AuditEvent schema is left unchanged in this slice to keep
+// conformance smoke compatibility; the schema will be updated in
+// Slice 7 docs sync.
 import { storage } from "./storage/index.js";
 import type { AuditEvent } from "./types.js";
 
@@ -21,6 +27,7 @@ export function logAudit(input: {
 }): AuditEvent {
   counter += 1;
   const event: AuditEvent = {
+    schemaVersion: 1,
     id: `audit_${counter}`,
     timestamp: new Date().toISOString(),
     tenantId: input.tenantId,

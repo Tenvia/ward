@@ -486,6 +486,9 @@ components:
       type: object
       required: [id, timestamp, tenantId, action, actor, reason]
       properties:
+        schemaVersion:
+          type: integer
+          enum: [1]
         id: { type: string }
         timestamp: { type: string, format: date-time }
         tenantId: { type: string }

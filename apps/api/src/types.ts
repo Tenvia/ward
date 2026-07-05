@@ -25,6 +25,7 @@ export interface PressureResult {
 }
 
 export interface AuditEvent {
+  schemaVersion: 1;
   id: string;
   timestamp: string;
   tenantId: string;
@@ -34,6 +35,7 @@ export interface AuditEvent {
   previousState?: string;
   nextState?: string;
   evidence?: Record<string, unknown>;
+  correlationId?: string;
 }
 
 export type ApprovableAction = "constrain" | "pause" | "resume";

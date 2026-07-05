@@ -895,6 +895,12 @@
           "reason"
         ],
         "properties": {
+          "schemaVersion": {
+            "type": "integer",
+            "enum": [
+              1
+            ]
+          },
           "id": {
             "type": "string"
           },

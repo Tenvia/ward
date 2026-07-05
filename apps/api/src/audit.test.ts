@@ -46,6 +46,26 @@ describe("audit", () => {
     assert.deepStrictEqual(ev.evidence, { loopCount: 42 });
   });
 
+  it("emits schemaVersion=1 on every event", () => {
+    const ev1 = logAudit({ tenantId: "acme", action: "schemaVersion-check-1" });
+    const ev2 = logAudit({ tenantId: "acme", action: "schemaVersion-check-2" });
+    assert.strictEqual(ev1.schemaVersion, 1);
+    assert.strictEqual(ev2.schemaVersion, 1);
+  });
+
+  it("preserves a stable, unique id across calls", () => {
+    resetAudit();
+    const ids = new Set<string>();
+    for (let i = 0; i < 5; i++) {
+      const ev = logAudit({ tenantId: "acme", action: `unique-${i}` });
+      ids.add(ev.id);
+    }
+    assert.strictEqual(ids.size, 5, "expected 5 distinct ids");
+    for (const id of ids) {
+      assert.match(id, /^audit_\d+$/);
+    }
+  });
+
   // ── listAudit ──────────────────────────────────────────────────────────
 
   it("returns all logged events in order", () => {
