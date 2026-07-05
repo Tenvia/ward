@@ -9,17 +9,29 @@ contract is HTTP + Docker; the TypeScript SDK is optional.
 
 ## Install and run
 
-Requirements: Docker (with Compose), curl for the smoke test.
+Requirements: Docker (with Compose), curl, and a local control token.
+For evaluator-safe setup, use the copy/paste flow in
+`docs/EVALUATOR_QUICKSTART.md`.
+
+Minimal pull path:
 
 ```bash
 git clone https://github.com/Tenvia/ward
 cd ward
-docker compose -f docker-compose.pull.yml up
+cat > .env <<'EOF'
+WARD_IMAGE=ghcr.io/tenvia/ward-api:v0.1.0-rc3
+WARD_REQUIRE_CONTROL_TOKEN=true
+WARD_STORAGE=sqlite
+WARD_PROXY_FAIL_MODE=open
+WARD_MODE=enforce
+EOF
+printf "WARD_CONTROL_TOKEN=%s\n" "$(openssl rand -hex 24)" >> .env
+docker compose --env-file .env -f docker-compose.pull.yml up
 ```
 
-This pulls the published image (`ghcr.io/tenvia/ward-api:v0.1.0-rc1`,
-public, no login needed). Open http://localhost:4317 — the Control
-Room is served by the API itself (one container, one port).
+This pulls the published image pinned by `WARD_IMAGE`. Open
+http://localhost:4317 — the Control Room is served by the API itself
+(one container, one port).
 
 To build locally instead (no prebuilt image, still no NPM on your
 machine):
@@ -37,18 +49,20 @@ What you get:
   do if assets are ever missing)
 - SQLite storage on the `ward-user-data` volume — containment state
   and audit survive container restarts
-- Minimal shared-token control auth prototype, ON by default with the
-  demo token `ward-demo-token`
+- Minimal shared-token control auth prototype, ON via `.env` in the
+  evaluator path
 
 Control auth warning: this is a single shared bearer token — a
-prototype boundary, NOT production RBAC. Override it in `.env`
-(`WARD_CONTROL_TOKEN=...`) for anything beyond a local demo, and do
-not expose Ward publicly at all yet. See `docs/ENVIRONMENT.md` for the
-full environment contract and safe evaluator baseline.
+prototype boundary, NOT production RBAC. Generate a local token in
+`.env` for evaluation, never reuse `ward-demo-token` beyond a local
+demo, and do not expose Ward publicly at all yet. See
+`docs/ENVIRONMENT.md` for the full environment contract.
 
 ## Try containment (curl only)
 
 ```bash
+set -a; . ./.env; set +a
+
 # A tenant's agent call goes through Ward
 curl -X POST http://localhost:4317/v1/chat/completions \
   -H "x-ward-tenant-id: tenant_acme" -H "content-type: application/json" \
@@ -56,7 +70,7 @@ curl -X POST http://localhost:4317/v1/chat/completions \
 
 # Constrain another tenant (Bearer token required)
 curl -X POST http://localhost:4317/ward/tenants/tenant_globex/constrain \
-  -H "authorization: Bearer ward-demo-token" \
+  -H "authorization: Bearer ${WARD_CONTROL_TOKEN}" \
   -H "content-type: application/json" \
   -d '{"actor":"operator","reason":"runaway agent"}'
 
@@ -93,8 +107,9 @@ See the trade-off notes in `docker-compose.fail-closed.yml` and
 A tiny Python CLI for terminal workflows against a running Ward:
 
 ```bash
+set -a; . ./.env; set +a
 uvx --from ./tools/wardctl wardctl health
-WARD_CONTROL_TOKEN=ward-demo-token uvx --from ./tools/wardctl wardctl constrain tenant_globex --reason demo
+uvx --from ./tools/wardctl wardctl constrain tenant_globex --reason demo
 ```
 
 See `tools/wardctl/README.md`. Docker remains the primary install path.

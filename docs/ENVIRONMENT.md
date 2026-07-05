@@ -12,6 +12,9 @@ production readiness, hosted Ward, HA, Postgres, enterprise RBAC, OIDC,
 compliance retention, tamper-proof receipts, or real upstream
 pass-through streaming.
 
+For the copy/paste evaluator flow that uses this contract, see
+`docs/EVALUATOR_QUICKSTART.md`.
+
 ## Secure evaluator baseline
 
 For an evaluator running the prebuilt image or user bundle locally, start

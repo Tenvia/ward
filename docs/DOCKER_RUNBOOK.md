@@ -10,6 +10,10 @@ production deployment guidance.
 
 ## User bundle (primary path, no NPM)
 
+For an evaluator-safe pull-and-verify flow with explicit env vars and a
+generated local control token, start with
+`docs/EVALUATOR_QUICKSTART.md`.
+
 ```bash
 cd ~/Projects/10via/ward
 docker compose -f docker-compose.user.yml up --build

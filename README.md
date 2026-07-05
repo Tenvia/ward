@@ -54,56 +54,79 @@ your SaaS ──(x-ward-tenant-id)──> Ward proxy ──> LLM / tool APIs
 
 ## First 60 seconds
 
-The image below is small and self-contained. Two terminals is all you
-need.
+This path uses the published image, explicit env vars, SQLite, and
+control auth with a generated local token. It is a local/container
+prototype check, not production deployment guidance.
 
 ```bash
-# 1. Pull the published image and start Ward.
-docker compose -f docker-compose.pull.yml up -d
+# 1. Create an explicit evaluator env file.
+cat > .env <<'EOF'
+WARD_IMAGE=ghcr.io/tenvia/ward-api:v0.1.0-rc3
+WARD_REQUIRE_CONTROL_TOKEN=true
+WARD_STORAGE=sqlite
+WARD_PROXY_FAIL_MODE=open
+WARD_MODE=enforce
+EOF
+printf "WARD_CONTROL_TOKEN=%s\n" "$(openssl rand -hex 24)" >> .env
+set -a; . ./.env; set +a
 
-# 2. Wait for the API to come up.
-until curl -sf http://localhost:4317/health >/dev/null; do sleep 0.5; done
+# 2. Pull the image and start Ward.
+docker compose --env-file .env -f docker-compose.pull.yml up -d
+until curl -fsS http://localhost:4317/health >/tmp/ward-health.json; do sleep 0.5; done
 
-# 3. Three calls demonstrate the tenant separation Acme/Globex-style.
-#    Happy tenant — returns a normal completion.
-curl -s -H "x-ward-tenant-id: acme" \
-     -H "content-type: application/json" \
-     -d '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"hi"}]}' \
-     http://localhost:4317/v1/chat/completions | head -c 200
+# 3. Verify health, OpenAPI, and Control Room.
+cat /tmp/ward-health.json
+curl -fsS http://localhost:4317/openapi.yaml | head -n 1
+curl -fsS http://localhost:4317/ -o /tmp/ward-control-room.html
+grep -q '<div id="root">' /tmp/ward-control-room.html && echo "Control Room served"
 
-#    Tenant you pause — the proxy returns 423 BEFORE any upstream call.
-curl -s -H "x-ward-tenant-id: globex" \
-     -H "content-type: application/json" \
-     -d '{"model":"gpt-4o-mini","messages":[]}' \
-     http://localhost:4317/v1/chat/completions | head -c 200
+# 4. Prove tenant containment with auth.
+curl -fsS -X POST http://localhost:4317/ward/tenants/tenant_globex/constrain \
+  -H "authorization: Bearer ${WARD_CONTROL_TOKEN}" \
+  -H "content-type: application/json" \
+  -d '{"actor":"evaluator","reason":"quickstart containment check"}'
+
+curl -sS -o /tmp/ward-globex-blocked.json -w "%{http_code}\n" \
+  -X POST http://localhost:4317/v1/chat/completions \
+  -H "x-ward-tenant-id: tenant_globex" \
+  -H "content-type: application/json" \
+  -d '{"model":"demo","messages":[{"role":"user","content":"hi"}]}'
+
+curl -sS -o /tmp/ward-acme-ok.json -w "%{http_code}\n" \
+  -X POST http://localhost:4317/v1/chat/completions \
+  -H "x-ward-tenant-id: tenant_acme" \
+  -H "content-type: application/json" \
+  -d '{"model":"demo","messages":[{"role":"user","content":"hi"}]}'
+
+# 5. Stop cleanly; add --volumes only to delete SQLite state.
+docker compose --env-file .env -f docker-compose.pull.yml down
 ```
 
 What you should see:
 
-- `acme` returns a normal OpenAI-shaped JSON completion
-  (model + choices).
-- `globex` is rejected at the proxy with `423 paused` after you pause
-  it via the Control Room (`http://localhost:4317/`, demo token
-  `ward-demo-token`) or via
-  `curl -X POST -H "authorization: Bearer ward-demo-token" \
-       http://localhost:4317/ward/tenants/globex/pause`.
-- `GET /ward/audit` shows every event — pause, block, would-block — in
-  order.
+- `/health` reports `storage: sqlite`, control auth required,
+  `controlRoomBundled: true`, and `openapi.served: true`.
+- The OpenAPI command prints `openapi: 3.0.3`.
+- The Globex call prints `429`; the Acme call prints `200`.
+- The generated token is for local evaluation only. Do not expose Ward
+  publicly yet, and never use `ward-demo-token` outside a local demo.
 
-When you're done, `docker compose -f docker-compose.pull.yml down`
-stops the container. SQLite audit survives until you also pass `--volumes`.
+Full evaluator walkthrough:
+[EVALUATOR_QUICKSTART](docs/EVALUATOR_QUICKSTART.md).
 
 ## Install (no NPM)
 
-The published image runs anywhere Docker does:
+The published image runs anywhere Docker does. For evaluator-safe setup,
+use the `.env` flow above or `docs/EVALUATOR_QUICKSTART.md`; running
+compose without explicit env vars may use demo defaults.
 
 ```bash
-docker compose -f docker-compose.pull.yml up
+docker compose --env-file .env -f docker-compose.pull.yml up
 ```
 
 This serves the Control Room at `http://localhost:4317/`, the API at
-`http://localhost:4317/v1/chat/completions` and the OpenAPI contract
-at `http://localhost:4317/openapi.yaml`. SQLite audit lives on the
+`http://localhost:4317/v1/chat/completions`, and the OpenAPI contract at
+`http://localhost:4317/openapi.yaml`. SQLite audit lives on the
 `ward-user-data` named volume.
 
 To build the image locally instead (contributors):
@@ -114,6 +137,7 @@ docker compose -f docker-compose.user.yml up --build
 ```
 
 Evaluating Ward? Start with the
+[evaluator quickstart](docs/EVALUATOR_QUICKSTART.md), then the
 [design-partner quickstart](docs/DESIGN_PARTNER_QUICKSTART.md).
 
 ## Integrate your existing SaaS
@@ -265,6 +289,7 @@ docs/                       Runbooks, claims, releases, strategy
 | Doc | What it covers |
 | --- | --- |
 | [USER_INSTALL_NO_NPM](docs/USER_INSTALL_NO_NPM.md) | The user install path |
+| [EVALUATOR_QUICKSTART](docs/EVALUATOR_QUICKSTART.md) | Pull, configure, verify, operate, and stop the local/container prototype |
 | [ENVIRONMENT](docs/ENVIRONMENT.md) | Supported env vars, safe evaluator baseline, prototype-only flags |
 | [DESIGN_PARTNER_QUICKSTART](docs/DESIGN_PARTNER_QUICKSTART.md) | Evaluate Ward in 8 steps |
 | [DESIGN_PARTNER_EVALUATION_SCRIPT](docs/DESIGN_PARTNER_EVALUATION_SCRIPT.md) | How to demo/discuss Ward |
