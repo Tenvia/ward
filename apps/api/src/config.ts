@@ -17,6 +17,11 @@ function envDeploymentMode(): DeploymentMode {
   if (raw === "docker" || raw === "kubernetes" || raw === "hosted") return raw;
   return "local";
 }
+function envWardMode(): import("./types.js").WardMode {
+  const raw = process.env.WARD_MODE;
+  if (raw === "observe") return "observe";
+  return "enforce";
+}
 
 export const config = {
   port: envNumber("PORT", 4317),
@@ -49,4 +54,5 @@ export const config = {
   dockerRunTimeoutMs: envNumber("WARD_DOCKER_RUN_TIMEOUT_MS", 30_000),
   upstreamBaseUrl: process.env.WARD_UPSTREAM_OPENAI_BASE_URL,
   upstreamApiKey: process.env.OPENAI_API_KEY,
+  wardMode: envWardMode(),
 };

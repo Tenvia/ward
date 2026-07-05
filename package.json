@@ -10,6 +10,7 @@
   "scripts": {
     "validate:openapi": "node scripts/validate-openapi.mjs",
     "smoke:openapi": "node scripts/smoke-openapi-conformance.mjs",
+    "smoke:observe-only": "node scripts/smoke-observe-only.mjs",
     "smoke:demo": "node scripts/smoke-demo.mjs",
     "smoke:sdk": "node scripts/smoke-sdk-guard.mjs",
     "smoke:reliability": "node scripts/smoke-reliability.mjs",

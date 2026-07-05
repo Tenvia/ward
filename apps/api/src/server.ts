@@ -61,11 +61,11 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 // ---------------------------------------------------------------------------
 // Health
 // ---------------------------------------------------------------------------
-
 app.get("/health", (_req: Request, res: Response) => {
   res.json({
     status: "ok",
     service: "ward-api",
+    wardMode: config.wardMode,
     deploymentMode: config.deploymentMode,
     upstreamMode: upstreamModeEnabled() ? "pass_through" : "mock_upstream",
     storage: config.storage,
@@ -152,29 +152,54 @@ app.post("/v1/chat/completions", async (req: Request, res: Response) => {
     });
     return;
   }
-
   // Enforcement happens before the request is counted or forwarded,
   // and is tenant-specific: one tenant's state never gates another's.
   if (tenant.state === "paused") {
-    const body: WardErrorBody = {
-      error: "ward_tenant_paused",
-      message: `Tenant ${tenantId} is paused by an operator. Request blocked.`,
-      tenantId,
-      state: "paused",
-    };
-    res.status(423).json(body);
-    return;
+    if (config.wardMode === "observe") {
+      res.header("x-ward-would-block", "paused");
+      logAudit({
+        tenantId,
+        action: "would_block",
+        actor: "ward-runtime",
+        reason: "Tenant paused; allowed in observe mode.",
+        previousState: tenant.state,
+        nextState: tenant.state,
+        evidence: { operation, correlationId },
+      });
+    } else {
+      const body: WardErrorBody = {
+        error: "ward_tenant_paused",
+        message: `Tenant ${tenantId} is paused by an operator. Request blocked.`,
+        tenantId,
+        state: "paused",
+      };
+      res.status(423).json(body);
+      return;
+    }
   }
 
   if (tenant.state === "constrained") {
-    const body: WardErrorBody = {
-      error: "ward_tenant_constrained",
-      message: `Tenant ${tenantId} is constrained by an operator. Request rejected; retry after resume.`,
-      tenantId,
-      state: "constrained",
-    };
-    res.status(429).json(body);
-    return;
+    if (config.wardMode === "observe") {
+      res.header("x-ward-would-block", "constrained");
+      logAudit({
+        tenantId,
+        action: "would_block",
+        actor: "ward-runtime",
+        reason: "Tenant constrained; allowed in observe mode.",
+        previousState: tenant.state,
+        nextState: tenant.state,
+        evidence: { operation, correlationId },
+      });
+    } else {
+      const body: WardErrorBody = {
+        error: "ward_tenant_constrained",
+        message: `Tenant ${tenantId} is constrained by an operator. Request rejected; retry after resume.`,
+        tenantId,
+        state: "constrained",
+      };
+      res.status(429).json(body);
+      return;
+    }
   }
 
   const record = recordRequest(tenantId);

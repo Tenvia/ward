@@ -78,3 +78,4 @@ export interface WardErrorBody {
   tenantId?: string;
   state?: TenantState;
 }
+export type WardMode = "enforce" | "observe";
