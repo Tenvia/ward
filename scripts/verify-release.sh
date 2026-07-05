@@ -68,7 +68,18 @@ kill "$API_PG" 2>/dev/null
 pkill -f "tsx src/server.ts" 2>/dev/null
 sleep 1
 
+# --- RC3 prototype smokes (each manages its own Ward process + port) ---
+# RC3 added four prototype smokes plus the failure-behavior battery;
+# none of them rely on the :4317 instance above. Each one spawns its
+# own Ward on its own port, asserts, and tears down. No orchestration
+# from this script.
+run_check "Smoke: RC3 audit durability (SQLite restart recovery)" npm run smoke:audit-durability --silent
+run_check "Smoke: RC3 per-tenant mode override" npm run smoke:tenant-mode-override --silent
+run_check "Smoke: RC3 incident receipt export" npm run smoke:incident-receipt --silent
+run_check "Smoke: RC3 failure behavior (trust boundaries)" npm run smoke:rc3-failure-behavior --silent
+
 run_check "Smoke: reliability (fail modes + control auth)" npm run smoke:reliability --silent
+
 
 # --- Browser E2E ---
 if (cd apps/control-room && npx playwright --version >/dev/null 2>&1); then
