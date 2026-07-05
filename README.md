@@ -6,7 +6,7 @@
 
 **Pause one customer's AI agents. Everyone else keeps running.**
 
-[![release](https://img.shields.io/badge/release-v0.1.0--rc3--pending-1e56d6)](docs/releases/v0.1.0-rc3.md)
+[![release](https://img.shields.io/badge/release-v0.1.0--rc3-1e56d6)](docs/releases/v0.1.0-rc3.md)
 [![install](https://img.shields.io/badge/install-docker%2C_no_npm-2496ED?logo=docker&logoColor=white)](docs/USER_INSTALL_NO_NPM.md)
 [![contract](https://img.shields.io/badge/API-OpenAPI_v0-6BA539?logo=openapiinitiative&logoColor=white)](openapi/ward.v0.yaml)
 [![verification](https://img.shields.io/badge/RC3_battery-passing-3fb950)](docs/BUILD_STATUS.md)
@@ -210,12 +210,12 @@ cd apps/control-room && npm run test:e2e && npm run test:e2e:auth
 
 `scripts/verify-release.sh` runs a curated subset (entry points,
 typechecks, contract validation, demo / sdk / reliability / openapi
-smokes, compose configs, image build, no-NPM user install). The four
-RC3 prototype smokes (`smoke:audit-durability`,
+`scripts/verify-release.sh` runs a curated subset that now includes
+all four RC3 prototype smokes (`smoke:audit-durability`,
 `smoke:tenant-mode-override`, `smoke:incident-receipt`,
-`smoke:rc3-failure-behavior`) are not yet wired into that harness —
-running them via `npm run smoke:*` directly covers the same ground
-and is fine for greenfield verification.
+`smoke:rc3-failure-behavior`). Running them via `npm run smoke:*`
+directly covers the same ground and is fine for greenfield
+verification.
 
 ## What you'd see when each smoke passes
 

@@ -100,3 +100,80 @@ switch `docker-compose.user.yml` guidance to the pull path.
   patch tag instead.
 - `docker-compose.pull.yml` honors `WARD_IMAGE=` so users can pin a
   known-good tag while a bad `latest` is being cleaned up.
+
+
+## v0.1.0-rc3 publish record — EXECUTED 2026-07-05
+
+Status: tagged locally, pushed to origin, image built and published to
+GHCR, anonymous pull verified, container booted, `/health` verified.
+
+### Tag and image
+
+- **Tag:** `v0.1.0-rc3` (annotated, local message: "v0.1.0-rc3: durable
+  operator trust — versioned audit, SQLite restart recovery,
+  per-tenant mode overrides, explicit transition contract, local
+  incident receipts, and failure-behavior smoke").
+- **Underlying commit:** `ada1658` (the most recent commit on
+  `origin/main` at publish time). HEAD matched `origin/main`; worktree
+  clean.
+- **Image:** `ghcr.io/tenvia/ward-api:v0.1.0-rc3` (linux/amd64 +
+  linux/arm64).
+- **Publish workflow:** `.github/workflows/docker-image.yml` (key:
+  `docker-image`), run `28756686801`. Status: passed.
+
+### Post-publish verification
+
+Performed against the published image:
+
+- **Anonymous pull:** `docker compose -f docker-compose.pull.yml pull`
+  against `ghcr.io/tenvia/ward-api:v0.1.0-rc3` succeeded without
+  registry login.
+- **Container boot:** `docker compose -f docker-compose.pull.yml up`
+  served Ward at `http://localhost:4317/`.
+- **`/health` returned:**
+
+  ```json
+  {
+    "status": "ok",
+    "service": "ward-api",
+    "controlRoomBundled": true,
+    "openapi": { "served": true, "path": "/openapi.yaml" },
+    "storage": "memory",
+    "controlAuth": "DISABLED — ..."
+  }
+  ```
+
+- **OpenAPI contract served** at `GET /openapi.yaml`.
+- **Storage mode:** `memory` (the default; SQLite is opt-in via
+  `WARD_STORAGE=sqlite`).
+- **Control auth:** disabled by default; enabling requires
+  `WARD_REQUIRE_CONTROL_TOKEN=true` and `WARD_CONTROL_TOKEN=<token>` in
+  the environment.
+
+### Workflow annotation (non-blocking)
+
+The `docker-image` workflow passed but emitted a non-blocking Node.js
+20 deprecation annotation from upstream GitHub Actions (the
+upstream-provided `actions/setup-node` is currently pinned to Node
+20). The build itself completed successfully on Node 20 and the
+published image runs the API correctly under the runtime Node
+embedded in the multi-stage Dockerfile (Node 22-alpine). This
+annotation does not affect the publish and is not actionable here;
+it will resolve when the upstream action moves to a Node 22
+default. Captured here so the next release verifier run records
+whether it has cleared.
+
+### Scope reminders
+
+Published `v0.1.0-rc3` is verified prototype support. It is **not**
+production-ready, **not** design-partner-ready, **not**
+compliance-ready, does **not** include hosted Ward, and does **not**
+include pass-through streaming against a real upstream. See
+`docs/CLAIMS_AND_EVIDENCE.md` for the full claim ledger and the
+claim rewrite rules.
+
+### Cadence
+
+Procedure and rollback handling for this publish are the same as
+`v0.1.0-rc1` above. The "never reuse a published tag" rule applied
+from `v0.1.0-rc1` carries forward.
