@@ -4,15 +4,32 @@
 // on boot (prototype persistence, not production storage).
 import { config } from "./config.js";
 import { storage } from "./storage/index.js";
-import type { TenantRecord, TenantState } from "./types.js";
+import type { TenantRecord, TenantState, WardModeOverride } from "./types.js";
 
 const tenants = new Map<string, TenantRecord>();
 for (const record of storage.loadTenants()) {
+  // Pre-Slice-3 SQLite rows may lack modeOverride; treat as "inherit".
+  if (!record.modeOverride) {
+    record.modeOverride = "inherit";
+  }
   tenants.set(record.tenantId, record);
 }
 
 function nowIso(): string {
   return new Date().toISOString();
+}
+
+// Allowed override values for the public API. Keep aligned with
+// WardModeOverride in types.ts; defined locally to avoid widening the
+// public type surface.
+const ALLOWED_MODE_OVERRIDES: ReadonlySet<WardModeOverride> = new Set([
+  "inherit",
+  "observe",
+  "enforce",
+]);
+
+export function isValidModeOverride(value: unknown): value is WardModeOverride {
+  return typeof value === "string" && ALLOWED_MODE_OVERRIDES.has(value as WardModeOverride);
 }
 
 export function getOrCreateTenant(tenantId: string): TenantRecord {
@@ -28,10 +45,14 @@ export function getOrCreateTenant(tenantId: string): TenantRecord {
       estimatedSpend: 0,
       activeWorkflowRuns: 0,
       deploymentMode: config.deploymentMode,
+      modeOverride: "inherit",
       updatedAt: nowIso(),
     };
     tenants.set(tenantId, record);
     storage.saveTenant(record);
+  } else if (!record.modeOverride) {
+    // Lazy backfill for legacy rows.
+    record.modeOverride = "inherit";
   }
   return record;
 }
@@ -81,6 +102,21 @@ export function setState(
   record.updatedAt = nowIso();
   storage.saveTenant(record);
   return { previous, next: state };
+}
+
+export function setModeOverride(
+  tenantId: string,
+  override: WardModeOverride
+): { previous: WardModeOverride; next: WardModeOverride; record: TenantRecord } {
+  if (!isValidModeOverride(override)) {
+    throw new Error(`invalid mode override: ${String(override)}`);
+  }
+  const record = getOrCreateTenant(tenantId);
+  const previous: WardModeOverride = record.modeOverride ?? "inherit";
+  record.modeOverride = override;
+  record.updatedAt = nowIso();
+  storage.saveTenant(record);
+  return { previous, next: override, record };
 }
 
 export function adjustActiveWorkflowRuns(tenantId: string, delta: number): void {

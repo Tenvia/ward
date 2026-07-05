@@ -28,6 +28,30 @@ function ts(val: number): void {
   dateNowIdx = dateNowValues.length - 1;
 }
 
+// RC3 Slice 3: TenantRecord now requires modeOverride. Tests that build
+// a TenantRecord literal use "inherit" so behavior matches the default
+// observed at runtime.
+function baseRecord(
+  now: number,
+  ts: ReadonlyArray<number>,
+  overrides: Partial<TenantRecord> = {}
+): TenantRecord {
+  return {
+    tenantId: "acme",
+    state: "running",
+    requestCount: 0,
+    recentRequestTimestamps: [...ts],
+    detectedPressure: false,
+    lastPressureReason: null,
+    estimatedSpend: 0,
+    activeWorkflowRuns: 0,
+    deploymentMode: "local",
+    modeOverride: "inherit",
+    updatedAt: new Date(now).toISOString(),
+    ...overrides,
+  };
+}
+
 describe("detectPressure", () => {
   beforeEach(() => {
     dateNowValues = [];
@@ -35,27 +59,18 @@ describe("detectPressure", () => {
   });
 
   it("returns detected=false when request count is below threshold", () => {
-    // Install stub FIRST so Date.now() is controlled; use it to capture the stubbed value.
     const restore = installDateNowStub();
     try {
       const now = Date.now(); // stubbed
       ts(now);               // make it the active stub value
 
-      const record: TenantRecord = {
-        tenantId: "acme",
-        state: "running",
-        requestCount: 0,
-        recentRequestTimestamps: Array.from(
+      const record = baseRecord(
+        now,
+        Array.from(
           { length: config.loopRequestThreshold - 1 },
-          (_, i) => now - i * 10,
-        ),
-        detectedPressure: false,
-        lastPressureReason: null,
-        estimatedSpend: 0,
-        activeWorkflowRuns: 0,
-        deploymentMode: "local",
-        updatedAt: new Date(now).toISOString(),
-      };
+          (_, i) => now - i * 10
+        )
+      );
       const result = detectPressure(record);
       assert.strictEqual(result.detected, false);
       assert.strictEqual(result.requestsInWindow, config.loopRequestThreshold - 1);
@@ -72,21 +87,10 @@ describe("detectPressure", () => {
       const now = Date.now();
       ts(now);
 
-      const record: TenantRecord = {
-        tenantId: "acme",
-        state: "running",
-        requestCount: 0,
-        recentRequestTimestamps: Array.from(
-          { length: config.loopRequestThreshold },
-          () => now - 1,
-        ),
-        detectedPressure: false,
-        lastPressureReason: null,
-        estimatedSpend: 0,
-        activeWorkflowRuns: 0,
-        deploymentMode: "local",
-        updatedAt: new Date(now).toISOString(),
-      };
+      const record = baseRecord(
+        now,
+        Array.from({ length: config.loopRequestThreshold }, () => now - 1)
+      );
       const result = detectPressure(record);
       assert.strictEqual(result.detected, true);
       assert.strictEqual(result.requestsInWindow, config.loopRequestThreshold);
@@ -105,18 +109,7 @@ describe("detectPressure", () => {
       const insideTs = now - 500;                      // well within 10 s
       const outsideTs = now - config.loopWindowMs - 1; // just past the boundary
 
-      const record: TenantRecord = {
-        tenantId: "acme",
-        state: "running",
-        requestCount: 0,
-        recentRequestTimestamps: [insideTs, outsideTs],
-        detectedPressure: false,
-        lastPressureReason: null,
-        estimatedSpend: 0,
-        activeWorkflowRuns: 0,
-        deploymentMode: "local",
-        updatedAt: new Date(now).toISOString(),
-      };
+      const record = baseRecord(now, [insideTs, outsideTs]);
       const result = detectPressure(record);
       // Only the inside timestamp should be counted
       assert.strictEqual(result.requestsInWindow, 1);
@@ -132,28 +125,15 @@ describe("detectPressure", () => {
       const now = Date.now();
       ts(now);
 
-      // 5 timestamps just inside the window, 3 timestamps well outside
-      const justInside = Array.from({ length: 5 }, (_, i) => now - (500 + i * 10));
-      const farOutside = Array.from(
-        { length: 3 },
-        (_, i) => now - config.loopWindowMs - 100 - i * 1000,
-      );
+      const inside = now - 100;                       // inside
+      const insideHalf = now - config.loopWindowMs / 2; // inside
+      const outside = now - config.loopWindowMs - 1;  // just outside
+      const far = now - config.loopWindowMs * 2;       // way outside
 
-      const record: TenantRecord = {
-        tenantId: "acme",
-        state: "running",
-        requestCount: 0,
-        recentRequestTimestamps: [...justInside, ...farOutside],
-        detectedPressure: false,
-        lastPressureReason: null,
-        estimatedSpend: 0,
-        activeWorkflowRuns: 0,
-        deploymentMode: "local",
-        updatedAt: new Date(now).toISOString(),
-      };
+      const record = baseRecord(now, [inside, insideHalf, outside, far]);
       const result = detectPressure(record);
-      assert.strictEqual(result.requestsInWindow, 5);
-      assert.strictEqual(result.detected, false); // 5 < default threshold of 8
+      assert.strictEqual(result.requestsInWindow, 2);
+      assert.strictEqual(result.detected, false);
     } finally {
       restore();
     }

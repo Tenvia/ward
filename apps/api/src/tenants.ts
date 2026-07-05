@@ -1,13 +1,25 @@
 // Tenant control endpoints: list/inspect, direct state transitions,
 // and the operator approval flow. Prototype only — no production RBAC;
 // these endpoints are open on the local network.
+//
+// RC3 Slice 3: added POST /:tenantId/mode to set a per-tenant mode
+// override (inherit | observe | enforce). Override changes are audited
+// with action="mode_override_changed" carrying previousOverride and
+// nextOverride in evidence.
 import { Router } from "express";
 import type { Request, Response } from "express";
 import { logAudit } from "./audit.js";
 import { consumeApproval, isApprovableAction, requestApproval } from "./approvals.js";
 import { requireControlAuth } from "./controlAuth.js";
 import { detectPressure } from "./detection.js";
-import { getOrCreateTenant, getTenant, listTenants, setState } from "./tenantState.js";
+import {
+  getOrCreateTenant,
+  getTenant,
+  isValidModeOverride,
+  listTenants,
+  setModeOverride,
+  setState,
+} from "./tenantState.js";
 import type { ApprovableAction, TenantState } from "./types.js";
 
 export const tenantsRouter = Router();
@@ -139,4 +151,38 @@ tenantsRouter.post("/:tenantId/apply-approved-action", requireControlAuth, (req:
     },
   });
   res.json(result);
+});
+
+// RC3 Slice 3: per-tenant mode override. Body shape:
+//   { mode: "inherit" | "observe" | "enforce",
+//     actor?: string,
+//     reason?: string }
+// Response shape mirrors TransitionResult.
+// Override changes are audited with action="mode_override_changed".
+tenantsRouter.post("/:tenantId/mode", requireControlAuth, (req: Request, res: Response) => {
+  const { mode, actor, reason } = (req.body ?? {}) as {
+    mode?: unknown;
+    actor?: string;
+    reason?: string;
+  };
+  if (!isValidModeOverride(mode)) {
+    res.status(400).json({
+      error: "ward_invalid_mode_override",
+      message: "mode must be one of: inherit, observe, enforce",
+    });
+    return;
+  }
+  const tenantIdParam = tenantParam(req);
+  const { previous, next, record } = setModeOverride(tenantIdParam, mode);
+  const event = logAudit({
+    tenantId: tenantIdParam,
+    action: "mode_override_changed",
+    actor: actor ?? "unknown",
+    reason: reason ?? "",
+    evidence: {
+      previousOverride: previous,
+      nextOverride: next,
+    },
+  });
+  res.json({ tenant: record, audit: event });
 });

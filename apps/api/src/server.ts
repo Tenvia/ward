@@ -29,6 +29,7 @@ import {
   recordRequest,
   resetAllTenants,
 } from "./tenantState.js";
+import { effectiveWardMode } from "./effectiveMode.js";
 import {
   cancelWorkflowRun,
   createWorkflowRun,
@@ -158,8 +159,14 @@ app.post("/v1/chat/completions", async (req: Request, res: Response) => {
   }
   // Enforcement happens before the request is counted or forwarded,
   // and is tenant-specific: one tenant's state never gates another's.
+  // RC3 Slice 3: compute the per-tenant effective mode from the
+  // global WARD_MODE and the tenant's modeOverride. Tenant-state
+  // enforcement decisions use the effective mode; missing-tenant
+  // 400, control-auth 401, and proxy fail-closed 503 remain governed
+  // by the global setting.
+  const effective = effectiveWardMode(config.wardMode, tenant.modeOverride ?? "inherit");
   if (tenant.state === "paused") {
-    if (config.wardMode === "observe") {
+    if (effective === "observe") {
       res.header("x-ward-would-block", "paused");
       logAudit({
         tenantId,
@@ -168,7 +175,7 @@ app.post("/v1/chat/completions", async (req: Request, res: Response) => {
         reason: "Tenant paused; allowed in observe mode.",
         previousState: tenant.state,
         nextState: tenant.state,
-        evidence: { operation, correlationId },
+        evidence: { operation, correlationId, effectiveMode: effective, override: tenant.modeOverride ?? "inherit" },
       });
     } else {
       const body: WardErrorBody = {
@@ -181,9 +188,8 @@ app.post("/v1/chat/completions", async (req: Request, res: Response) => {
       return;
     }
   }
-
   if (tenant.state === "constrained") {
-    if (config.wardMode === "observe") {
+    if (effective === "observe") {
       res.header("x-ward-would-block", "constrained");
       logAudit({
         tenantId,
@@ -192,7 +198,7 @@ app.post("/v1/chat/completions", async (req: Request, res: Response) => {
         reason: "Tenant constrained; allowed in observe mode.",
         previousState: tenant.state,
         nextState: tenant.state,
-        evidence: { operation, correlationId },
+        evidence: { operation, correlationId, effectiveMode: effective, override: tenant.modeOverride ?? "inherit" },
       });
     } else {
       const body: WardErrorBody = {

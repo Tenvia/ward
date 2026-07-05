@@ -370,6 +370,55 @@
         }
       }
     },
+    "/ward/tenants/{tenantId}/mode": {
+      "post": {
+        "tags": [
+          "tenants"
+        ],
+        "operationId": "setTenantModeOverride",
+        "summary": "Set a tenant's per-tenant mode override (control auth when enabled)",
+        "description": "Override the global WARD_MODE for a single tenant. Supported\nvalues: \"inherit\" (defer to global WARD_MODE), \"observe\" (force\nobserve mode for this tenant), \"enforce\" (force enforce mode for\nthis tenant). There is no \"off\" or silent bypass value — \"observe\"\nstill emits would-block audit evidence when state would have\nblocked. Override changes are audited with action\n\"mode_override_changed\".\n",
+        "security": [
+          {
+            "controlToken": []
+          },
+          {}
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantIdPath"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TenantModeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/TransitionResult"
+          },
+          "400": {
+            "description": "Invalid mode override value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WardError"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
     "/ward/tenants/{tenantId}/approval": {
       "post": {
         "tags": [
@@ -827,6 +876,15 @@
           "paused"
         ]
       },
+      "WardModeOverride": {
+        "description": "Per-tenant mode override. \"inherit\" defers to the global\nWARD_MODE setting; \"observe\" and \"enforce\" pin the tenant\nregardless of the global default. There is no \"off\" or silent\nbypass value.\n",
+        "type": "string",
+        "enum": [
+          "inherit",
+          "observe",
+          "enforce"
+        ]
+      },
       "Tenant": {
         "type": "object",
         "required": [
@@ -837,6 +895,7 @@
           "estimatedSpend",
           "activeWorkflowRuns",
           "deploymentMode",
+          "modeOverride",
           "updatedAt"
         ],
         "properties": {
@@ -878,9 +937,29 @@
               "hosted"
             ]
           },
+          "modeOverride": {
+            "$ref": "#/components/schemas/WardModeOverride"
+          },
           "updatedAt": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "TenantModeRequest": {
+        "type": "object",
+        "required": [
+          "mode"
+        ],
+        "properties": {
+          "mode": {
+            "$ref": "#/components/schemas/WardModeOverride"
+          },
+          "actor": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
           }
         }
       },

@@ -18,6 +18,7 @@
     "smoke:sdk": "node scripts/smoke-sdk-guard.mjs",
     "smoke:reliability": "node scripts/smoke-reliability.mjs",
     "smoke:audit-durability": "node scripts/smoke-audit-durability.mjs",
+    "smoke:tenant-mode-override": "node scripts/smoke-tenant-mode-override.mjs",
     "test:unit": "npm run test:unit --prefix apps/api",
     "typecheck": "npm run typecheck --prefix apps/api && npm run typecheck --prefix packages/ward-sdk && npm run typecheck --prefix examples/node-express-ai-saas && npm run typecheck --prefix examples/docker-agent && npm run typecheck --prefix apps/control-room",
     "install:all": "npm install --prefix apps/api && npm install --prefix packages/ward-sdk && npm install --prefix examples/node-express-ai-saas && npm install --prefix examples/docker-agent && npm install --prefix apps/control-room"

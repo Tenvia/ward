@@ -216,6 +216,35 @@ paths:
         "200": { $ref: "#/components/responses/TransitionResult" }
         "401": { $ref: "#/components/responses/Unauthorized" }
 
+  /ward/tenants/{tenantId}/mode:
+    post:
+      tags: [tenants]
+      operationId: setTenantModeOverride
+      summary: Set a tenant's per-tenant mode override (control auth when enabled)
+      description: |
+        Override the global WARD_MODE for a single tenant. Supported
+        values: "inherit" (defer to global WARD_MODE), "observe" (force
+        observe mode for this tenant), "enforce" (force enforce mode for
+        this tenant). There is no "off" or silent bypass value — "observe"
+        still emits would-block audit evidence when state would have
+        blocked. Override changes are audited with action
+        "mode_override_changed".
+      security: [{ controlToken: [] }, {}]
+      parameters: [{ $ref: "#/components/parameters/TenantIdPath" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TenantModeRequest" }
+      responses:
+        "200": { $ref: "#/components/responses/TransitionResult" }
+        "400":
+          description: Invalid mode override value
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WardError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
   /ward/tenants/{tenantId}/approval:
     post:
       tags: [approvals]
@@ -321,7 +350,8 @@ paths:
       tags: [workflow-runs]
       operationId: getWorkflowRun
       summary: Inspect one workflow run
-      parameters: [{ $ref: "#/components/parameters/RunIdPath" }]
+      parameters:
+        - $ref: "#/components/parameters/RunIdPath"
       responses:
         "200":
           description: The run
@@ -461,9 +491,18 @@ components:
       type: string
       enum: [running, constrained, paused]
 
+    WardModeOverride:
+      description: |
+        Per-tenant mode override. "inherit" defers to the global
+        WARD_MODE setting; "observe" and "enforce" pin the tenant
+        regardless of the global default. There is no "off" or silent
+        bypass value.
+      type: string
+      enum: [inherit, observe, enforce]
+
     Tenant:
       type: object
-      required: [tenantId, state, requestCount, detectedPressure, estimatedSpend, activeWorkflowRuns, deploymentMode, updatedAt]
+      required: [tenantId, state, requestCount, detectedPressure, estimatedSpend, activeWorkflowRuns, deploymentMode, modeOverride, updatedAt]
       properties:
         tenantId: { type: string }
         state: { $ref: "#/components/schemas/TenantState" }
@@ -480,7 +519,18 @@ components:
         deploymentMode:
           type: string
           enum: [local, docker, kubernetes, hosted]
+        modeOverride:
+          $ref: "#/components/schemas/WardModeOverride"
         updatedAt: { type: string, format: date-time }
+
+    TenantModeRequest:
+      type: object
+      required: [mode]
+      properties:
+        mode:
+          $ref: "#/components/schemas/WardModeOverride"
+        actor: { type: string }
+        reason: { type: string }
 
     AuditEvent:
       type: object
