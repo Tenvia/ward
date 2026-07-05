@@ -56,7 +56,7 @@ your SaaS ──(x-ward-tenant-id)──> Ward proxy ──> LLM / tool APIs
 ## Quickstart (no NPM)
 
 ```bash
-git clone https://github.com/jenksed/ward && cd ward
+git clone https://github.com/Tenvia/ward && cd ward
 docker compose -f docker-compose.user.yml up --build
 ```
 
