@@ -127,9 +127,20 @@ Ward must never become the outage. What exists today, verified per
 
 - Production-grade durable state and audit (SQLite persistence is a
   prototype; approval tokens and workflow runs stay in-memory; no
-  retention policy or export).
-- Production auth/RBAC (only the shared-token prototype exists).
+  retention policy or signed exports). The Markdown incident
+  receipt added in RC3 is **operational evidence** assembled from
+  Ward's local audit log — not legal/compliance certification, not
+  tamper-proof, not a substitute for a production audit trail.
+  `npm run incident:export` (`scripts/export-incident-receipt.mjs`)
+  is the entry point.
+- Production auth/RBAC (only the shared-token prototype exists;
+  no per-operator identity, rotation, or audit attribution).
 - Real dollar metering (`estimatedSpend` is a fixed per-call rate).
-- Multi-node/multi-replica deployment (blocked on durable shared state).
-- Tool sandboxing and prompt-injection detection — not part of Ward's
-  containment claim.
+- Multi-node/multi-replica deployment (blocked on durable shared
+  state). The RC3 prototype rows in `docs/CLAIMS_AND_EVIDENCE.md`
+  do NOT change multi-node status.
+- Pass-through streaming against a real upstream — a `stream: true`
+  request still receives the deterministic mock, never upstream
+  SSE (the data plane does not implement upstream SSE).
+- Tool sandboxing and prompt-injection detection — not part of
+  Ward's containment claim.

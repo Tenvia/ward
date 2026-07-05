@@ -90,10 +90,15 @@ Goal: make Ward the artifact of record for tenant-level AI incidents.
 - [ ] **Incidents** — group detections, approvals, transitions, and
       blocks into a first-class incident with a timeline in the Control
       Room
-- [ ] **Containment receipts** — an exportable, self-contained record of
+- [~] **Containment receipts** — an exportable, self-contained record of
       one incident (what was detected, who approved, what was contained,
       when it resumed, what never blipped) that support can hand to the
-      affected customer
+      affected customer. RC3 shipped a Markdown exporter from Ward's
+      SQLite audit (see `docs/CLAIMS_AND_EVIDENCE.md` RC3 prototype rows,
+      `npm run incident:export`); the receipts are operational evidence,
+      not legal/compliance certification, and are not tamper-proof.
+      Phase 2 expands to versioned schema, signing, and a designed
+      narrative pack; design-partner feedback still needed.
 - [ ] **Notification webhooks** — pressure detected / containment applied
       / tenant resumed, so the on-call loop starts where operators
       already live (Slack, PagerDuty via webhook first)

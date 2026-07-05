@@ -135,19 +135,24 @@ npm run smoke:pass-through:mock  # forwardToUpstream against a local mock (RC2)
 npm run smoke:streaming:mock   # deterministic mock SSE, enforcement first (RC2)
 npm run bench:latency          # local p50/p95 across mock + observe paths (RC2)
 npm run test:unit              # core state/approval/audit unit baseline (RC2)
+npm run smoke:audit-durability    # SQLite audit survives restart (RC3)
+npm run smoke:tenant-mode-override  # per-tenant observe/enforce override (RC3)
+npm run smoke:incident-receipt    # Markdown incident receipt from audit (RC3)
+npm run smoke:rc3-failure-behavior  # RC3 trust/evidence boundary smoke (RC3)
 ./scripts/smoke-user-install.sh          # no-NPM user path (docker + curl)
 cd apps/control-room && npm run test:e2e && npm run test:e2e:auth
 ```
 
-RC2 verification notes: the four RC2 smokes and the local benchmark
-exercise the data-plane proof without paid provider calls. None of
-these claim production SLA, broad provider compatibility, or
-design-partner readiness; see `docs/CLAIMS_AND_EVIDENCE.md`.
-
-## Repository layout
-
-```text
-apps/api/                      Ward API + bundled Control Room (4317)
+RC3 verification notes: the four RC3 smokes (`smoke:audit-durability`,
+`smoke:tenant-mode-override`, `smoke:incident-receipt`,
+`smoke:rc3-failure-behavior`) plus the unit suite (10 suites, 53
+checks) prove the durable-operator-trust proof without paid provider
+calls. None of these claim production SLA, broad provider
+compatibility, design-partner readiness, compliance-grade audit,
+or tamper-evident receipts; see `docs/CLAIMS_AND_EVIDENCE.md`.
+`scripts/verify-release.sh` does not yet include the four RC3
+smokes — that is a deliberate Slice 8 deliverable, not an
+oversight.
 apps/control-room/             Control Room source (built into the image)
 packages/ward-sdk/             Optional TypeScript SDK
 examples/node-express-ai-saas/ Existing-SaaS demo app (4401)

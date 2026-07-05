@@ -1,5 +1,62 @@
 # Ward Build Status
 
+## Tenth session (2026-07-05): RC3 docs + claims sync
+
+Docs-only session following the RC3 implementation (Slices 1–6). No code,
+contract, script, or compose changes; no tag, push, or publish.
+
+What shipped this session:
+
+- `docs/CLAIMS_AND_EVIDENCE.md` — seven new prototype rows under
+  "RC3 prototype rows" covering versioned audit events, SQLite audit
+  persistence, per-tenant mode override, state transition contract,
+  transition rejection envelope, incident receipt export, and RC3
+  failure-behavior coverage. Each row pins the exact command that
+  verifies it (e.g. `npm run smoke:audit-durability` → 44/44 pass).
+- `docs/CLAIMS_AND_EVIDENCE.md` — claim rewrite rules extended with
+  RC3-aware rewrites for "durable audit trail" and "tamper-proof
+  receipt" wording. Review discipline paragraph refreshed to call out
+  the RC3 prototype rows' command-grounded invariant.
+- `docs/releases/v0.1.0-rc3.md` — implementation summary added below
+  the planning sections; the doc previously described only the
+  planning path, now records what shipped.
+- `docs/ARCHITECTURE.md` — fail-open gap note still present; the
+  "Out of scope today" list now includes an explicit call-out that
+  audit is local prototype, not compliance-grade, and that incident
+  receipts are operational evidence.
+- `docs/DEPLOYMENT_MODEL.md` — storage backends table adds a note that
+  audit restart persistence is verified by `smoke:audit-durability`.
+- `ROADMAP.md` — Phase 1 RC2 boxes left as-is; Phase 2 incident
+  receipts line moves from "Incidents / Containment receipts" (planned)
+  to "Containment receipts" with `prototype, demo-supported` annotation.
+  Post-RC3 the receipts subtask is `prototype`; related Phase 2
+  sub-bullets (notifications) remain `planned`. Phase 3 and beyond
+  untouched (no new capability shipped there).
+
+Verification battery (all passed) — every command also checked in
+`docs/CLAIMS_AND_EVIDENCE.md` RC3 prototype rows:
+
+| Command | Result |
+| --- | --- |
+| `npm run test:unit` | 53/53 pass (10 suites, 0 failures) |
+| `npm run typecheck --prefix apps/api` | exit 0, zero diagnostics |
+| `npm run validate:openapi` | 14 paths, 13 schemas |
+| `npm run smoke:observe-only` | 13/13 PASS |
+| `npm run smoke:pass-through:mock` | 9/9 PASS |
+| `npm run smoke:streaming:mock` | 20/20 PASS |
+| `npm run smoke:audit-durability` | 44/44 PASS |
+| `npm run smoke:tenant-mode-override` | 38/38 PASS |
+| `npm run smoke:incident-receipt` | 20/20 PASS |
+| `npm run smoke:rc3-failure-behavior` | 37/37 PASS |
+| `npm run smoke:openapi` (live API on `:4317`, freshly spawned) | 26/26 PASS |
+| `npm run smoke:reliability` | 13/13 PASS |
+| `npm run bench:latency` | 3/3 scenarios, 50/50 each |
+
+Local/dev only — production SLA, multi-replica durability,
+provider-wide overhead, Postgres retention, multi-node failover,
+real Kubernetes runner, and pass-through streaming against a real
+upstream remain NOT claimed.
+
 ## Ninth session (2026-07-05): RC2 verification + docs/claims sync
 
 What shipped this session:
@@ -165,8 +222,8 @@ honestly labeled unexercised. Saastle remains untouched.
   layer over existing tools, not a replacement), what not to claim.
 - `docs/PUBLISH_READINESS.md` — first-publish procedure with clearly
   labeled future commands (`v0.1.0-rc1` recommended first), GHCR
-  permission gates, post-publish verification, rollback notes. Not
-  executed.
+  permission gates, post-publish verification (performed against the
+  live package), rollback notes. Not executed.
 - Docs cross-linked: README, quickstart, USER_INSTALL_NO_NPM,
   DOCKER_RUNBOOK; claims ledger updated.
 

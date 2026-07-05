@@ -90,8 +90,7 @@ option.
 | Backend | Setting | Status |
 | --- | --- | --- |
 | memory | `WARD_STORAGE=memory` (default) | implemented prototype; all state lost on restart |
-| sqlite | `WARD_STORAGE=sqlite` + `WARD_SQLITE_PATH` | prototype; tenants + audit events persist across restart (verified locally). Uses Node's built-in `node:sqlite` (experimental in Node 22). Workflow runs and approval tokens remain in-memory. |
-| postgres | — | planned, for hosted SaaS / Kubernetes |
+| sqlite | `WARD_STORAGE=sqlite` + `WARD_SQLITE_PATH` | prototype; tenants + audit events persist across restart (verified locally by `npm run smoke:audit-durability`, 44/44 checks). Uses Node's built-in `node:sqlite` (experimental in Node 22). Workflow runs and approval tokens remain in-memory. |
 
 ## Failure behavior
 
