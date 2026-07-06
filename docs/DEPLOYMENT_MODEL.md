@@ -8,7 +8,10 @@ never requires Saastle in any mode.
 
 Environment variables and safe evaluator defaults are documented in
 `docs/ENVIRONMENT.md`; deployment mode names below are prototype labels
-unless a section explicitly says the mode is implemented.
+unless a section explicitly says the mode is implemented. Common
+prototype-incident runbooks (accidental pause, observe-mode would-blocks,
+control auth misconfig, upstream failure, SQLite missing, incident
+receipt export, verifier failure) live in `docs/OPERATOR_RUNBOOK.md`.
 
 ## Modes
 

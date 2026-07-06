@@ -13,7 +13,10 @@ compliance retention, tamper-proof receipts, or real upstream
 pass-through streaming.
 
 For the copy/paste evaluator flow that uses this contract, see
-`docs/EVALUATOR_QUICKSTART.md`.
+`docs/EVALUATOR_QUICKSTART.md`. For prototype-incident runbooks
+(control auth misconfig, accidental pause, observe-mode would-blocks,
+upstream failure, SQLite missing, incident receipt export, verifier
+failure), see `docs/OPERATOR_RUNBOOK.md`.
 
 ## Secure evaluator baseline
 

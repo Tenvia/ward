@@ -292,6 +292,7 @@ docs/                       Runbooks, claims, releases, strategy
 | [EVALUATOR_QUICKSTART](docs/EVALUATOR_QUICKSTART.md) | Pull, configure, verify, operate, and stop the local/container prototype |
 | [ENVIRONMENT](docs/ENVIRONMENT.md) | Supported env vars, safe evaluator baseline, prototype-only flags |
 | [DESIGN_PARTNER_QUICKSTART](docs/DESIGN_PARTNER_QUICKSTART.md) | Evaluate Ward in 8 steps |
+| [OPERATOR_RUNBOOK](docs/OPERATOR_RUNBOOK.md) | Short runbooks for common prototype incidents |
 | [DESIGN_PARTNER_EVALUATION_SCRIPT](docs/DESIGN_PARTNER_EVALUATION_SCRIPT.md) | How to demo/discuss Ward |
 | [DEMO_SCRIPT](docs/DEMO_SCRIPT.md) | The Acme/Globex walkthrough |
 | [EXISTING_SAAS_INTEGRATION](docs/EXISTING_SAAS_INTEGRATION.md) | Stack-neutral integration |

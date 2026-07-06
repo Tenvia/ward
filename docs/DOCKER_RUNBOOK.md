@@ -133,6 +133,10 @@ For SQLite-backed persistence (the evaluator path) see
 container restart, the offline backup/restore procedure, and the
 explicit non-goals (HA, shared state, compliance retention).
 
+For common prototype-incident runbooks (accidental pause,
+control auth misconfig, upstream failure, verifier failure), see
+`docs/OPERATOR_RUNBOOK.md`.
+
 ## Verify config without starting
 
 ```bash
