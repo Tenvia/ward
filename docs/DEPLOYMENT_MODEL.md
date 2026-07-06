@@ -94,7 +94,7 @@ option.
 | Backend | Setting | Status |
 | --- | --- | --- |
 | memory | `WARD_STORAGE=memory` (default) | implemented prototype; all state lost on restart |
-| sqlite | `WARD_STORAGE=sqlite` + `WARD_SQLITE_PATH` | prototype; tenants + audit events persist across restart (verified locally by `npm run smoke:audit-durability`; the script prints its own count). Uses Node's built-in `node:sqlite` (experimental in Node 22). Workflow runs and approval tokens remain in-memory. |
+| sqlite | `WARD_STORAGE=sqlite` + `WARD_SQLITE_PATH` | prototype; tenants + audit events persist across restart (verified locally by `npm run smoke:audit-durability`; the script prints its own count). Uses Node's built-in `node:sqlite` (experimental in Node 22). Workflow runs and approval tokens remain in-memory. See `docs/SQLITE_DEPLOYMENT.md` for backup, restore, and recovery scope. |
 
 ## Failure behavior
 
@@ -106,3 +106,13 @@ option.
 | `stream: true` on a paused/constrained tenant in enforce mode | Returns 423/429 JSON WardError BEFORE any SSE header is flushed; mock or real upstream receives no request. | implemented prototype (`npm run smoke:streaming:mock`) |
 | Ward proxy process/network hard-down | Ward cannot pass traffic; requires customer-side fallback routing or HA Ward deployment | planned — not claimed |
 | Control endpoint safety | Shared bearer token on mutating `/ward/*` routes (`WARD_REQUIRE_CONTROL_TOKEN`) | implemented prototype; not production RBAC |
+
+## SQLite deployment reference
+
+`docs/SQLITE_DEPLOYMENT.md` is the authoritative reference for the
+evaluator persistence path. It documents what SQLite mode persists,
+what survives an API or container restart, the supported offline
+backup and restore procedure today, the `node:sqlite` experimental
+caveats, and the explicit non-goals (HA, multi-replica shared state,
+compliance retention, tamper-evidence).
+

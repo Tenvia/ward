@@ -128,6 +128,11 @@ environment variables, safe evaluator defaults, prototype-only flags,
 and dangerous/dev-only settings. Copy `.env.example` to `.env` for a
 local starting point.
 
+For SQLite-backed persistence (the evaluator path) see
+`docs/SQLITE_DEPLOYMENT.md`; it covers what survives an API or
+container restart, the offline backup/restore procedure, and the
+explicit non-goals (HA, shared state, compliance retention).
+
 ## Verify config without starting
 
 ```bash

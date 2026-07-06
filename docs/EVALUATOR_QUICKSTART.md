@@ -137,7 +137,10 @@ docker compose --env-file .env -f docker-compose.pull.yml down --volumes
 ```
 
 SQLite remains local prototype state. It is not HA, not shared across
-replicas, not Postgres, and not compliance-grade retention.
+replicas, not Postgres, and not compliance-grade retention. For the
+authoritative evaluator-side persistence reference (what persists,
+what survives, offline backup and restore, `node:sqlite` caveats), see
+`docs/SQLITE_DEPLOYMENT.md`.
 
 ## If a check fails
 
