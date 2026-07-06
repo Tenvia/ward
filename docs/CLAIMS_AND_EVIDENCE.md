@@ -79,6 +79,15 @@ internal 10via practice; see `docs/SAASTLE_SOURCE_MAP.md`).
 | Local incident receipt export | prototype | `npm run incident:export` (`scripts/export-incident-receipt.mjs`) reads `WARD_STORAGE=sqlite` or a live `/ward/audit` and emits a Markdown document with the required sections (generated timestamp, tenant ID, audit event count + IDs in a code block, state transition summary, would-block summary, mode-override summary, approval summary, limitations block disclaiming compliance/forensic/tamper-proof/production posture). A `scripts/smoke-incident-receipt.mjs` smoke generates a small scenario, exports, and asserts required content + disclaimer semantics (20/20). |
 | RC3 failure-behavior smoke coverage | prototype | `npm run smoke:rc3-failure-behavior` (`scripts/smoke-rc3-failure-behavior.mjs`) covers 9 cases (37 checks): audit survives restart, missing tenant header is JSON, upstream failure surfaces a clear 502 in enforce + observe mode (must NOT be hidden as would-block), enforce mode blocks before upstream (zero upstream hits while constrained), approval token reuse rejected (single-use), streaming + constrained returns 429 JSON (not SSE), `paused→constrained` returns 409 with the documented envelope, `smoke:incident-receipt` still passes. All 37/37 green (exit 0). |
 
+### RC4 documentation rows (Slice 6 authorship; docs-only, not runtime evidence)
+
+| Claim | Status | Evidence / caveat |
+| --- | --- | --- |
+| Documented evaluator quickstart | prototype | `docs/EVALUATOR_QUICKSTART.md` provides a copy/paste path: explicit `.env`, generated local control token, `docker compose --env-file .env -f docker-compose.pull.yml up -d`, health/OpenAPI/Control Room checks, authenticated containment, audit inspection, and clean teardown. The compose path is described using existing compose files. `docker compose -f docker-compose.pull.yml config -q` was not executed in this session; the full pull/boot/curl sequence was also not executed. Runtime claim is therefore "the doc exists and matches the existing compose path," not "the flow was executed end to end." |
+| Documented SQLite deployment and recovery note | prototype | `docs/SQLITE_DEPLOYMENT.md` documents what SQLite mode persists, what survives an API or container restart, the supported offline backup/restore procedure today, `node:sqlite` experimental caveats, and the explicit non-goals (HA, multi-replica, compliance retention, tamper-evidence). No storage code changed. Restart persistence remains the RC3 `smoke:audit-durability` evidence. |
+| Documented operator runbook | prototype | `docs/OPERATOR_RUNBOOK.md` provides seven short runbooks (RB-1 accidental pause, RB-2 observe-mode would-blocks, RB-3 control auth misconfig, RB-4 upstream failure, RB-5 SQLite missing, RB-6 incident receipt export, RB-7 release verifier failure) in symptom / first check / likely cause / safe action / when-to-stop shape. Behavior cross-checked against the storage code, the control auth implementation, and the incident-receipt script. |
+| Documented post-publish verification flow | prototype | `docs/POST_PUBLISH_VERIFICATION.md` is the source of truth for the repeatable, copy/paste post-publish flow: anonymous GHCR pull, image digest inspection, compose config validation, boot, health, OpenAPI, Control Room, control auth probe, evaluator containment check, and teardown. **The scripted form (`scripts/post-publish-verify.sh`) and any extension of `scripts/verify-release.sh` are deliberately deferred to a separate implementation slice requiring explicit owner approval; nothing in this commit pulls from, logs into, or otherwise touches GHCR.** |
+
 ## Planned claims (do not state as existing)
 
 | Claim | Status | Note |
@@ -157,3 +166,27 @@ Release verification script row above notes the current gap.
 - Production auth/RBAC, Postgres, hosted Ward, pass-through streaming
   against a real upstream, and tamper-evident receipts all remain
   `planned` until built and verified.
+
+## Open risks introduced at end of RC4 (docs-only slices)
+
+- Five RC4 slices (Slices 0–5) shipped docs-only on
+  `rc4-deployment-readiness`; no runtime code, script, compose,
+  tag, push, or publish was performed. The full release battery
+  was not re-run during these slices; only `npm run validate:openapi`
+  was re-run as a regression check and remained green
+  (14 paths, 13 schemas present).
+- `docs/POST_PUBLISH_VERIFICATION.md` is the source of truth for
+  post-publish checks, but the script form is **not** in this
+  release. Until the script exists, post-publish verification
+  remains a manual operator flow.
+- The evaluator path now requires explicit `.env` and a
+  generated local control token. `docker-compose.pull.yml` and
+  `docker-compose.user.yml` still contain a demo-token fallback
+  for local convenience; this is documented but not enforced.
+- The root `docker-compose.yml` stack still boots with control
+  auth disabled unless env vars are set. Documented in
+  `docs/ENVIRONMENT.md`; not changed.
+- No third-party smoke (Docker daemon, Playwright browsers, GHCR
+  visibility) was re-run during these slices. Each of those is
+  recorded as the prior session's evidence; nothing in RC4
+  re-establishes that baseline for the present branch.
