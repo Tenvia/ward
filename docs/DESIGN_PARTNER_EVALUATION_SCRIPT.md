@@ -19,9 +19,13 @@ running.
 
 ## Five-minute demo flow
 
-1. Start Ward: `docker compose -f docker-compose.user.yml up --build`.
-2. Open the Control Room at http://localhost:4317 (token:
-   `ward-demo-token`).
+1. Start Ward using one path:
+   - evaluator-safe: complete `docs/EVALUATOR_QUICKSTART.md` first and
+     keep using the generated `WARD_CONTROL_TOKEN`
+   - local demo: `docker compose -f docker-compose.user.yml up --build`
+     and use `ward-demo-token`
+2. Open the Control Room at http://localhost:4317 and paste the token
+   for the path you chose.
 3. Acme request succeeds (curl from the quickstart) — tenant appears.
 4. Globex starts pressure (10-call loop) — say "this is one customer's
    agent stuck retrying."
@@ -70,9 +74,10 @@ tools. Ward is the tenant containment layer over them.
   answer: if K8s-native is a hard requirement today, Ward is early.
 - "We cannot put a proxy in the critical path." Two honest answers:
   degraded fail-open is implemented and marked on every response; but
-  hard-down of the proxy process still needs your fallback routing or
-  an HA deployment, which doesn't exist yet. If that's disqualifying
-  today, the cooperative SDK guard is the non-proxy entry point.
+  hard-down of the proxy process still needs fallback routing on your
+  side. Ward does not currently provide HA for hard-down scenarios. If
+  that's disqualifying today, the cooperative SDK guard is the non-proxy
+  entry point.
 - "This is not production-ready." Correct, and we say so. It's a
   prototype for design partners; the claims ledger
   (`docs/CLAIMS_AND_EVIDENCE.md`) lists exactly what's real.

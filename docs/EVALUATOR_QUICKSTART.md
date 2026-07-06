@@ -109,6 +109,14 @@ Expected health facts:
 - `controlRoomBundled` is `true`
 - `openapi.served` is `true`
 
+## After this quickstart: demo the story
+
+This page is the safe bootstrap and verification path. After it passes,
+use `docs/DESIGN_PARTNER_QUICKSTART.md` for the Acme/Globex walkthrough
+and `docs/DEMO_SCRIPT.md` for narration. Keep using the generated
+`WARD_CONTROL_TOKEN` from `.env`; do not switch back to the demo token
+unless you intentionally restart with the local demo defaults.
+
 ## Demo-token warning
 
 `docker-compose.pull.yml` and `docker-compose.user.yml` contain a demo

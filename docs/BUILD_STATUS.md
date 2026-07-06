@@ -1,5 +1,45 @@
 # Ward Build Status
 
+## Thirteenth session (2026-07-06): RC5 first-run demo walkthrough polish
+
+RC5 Slice 3 polished the written first-run and demo walkthrough path.
+This session stayed documentation-only: no runtime code, contract,
+compose, tag, push, publish, deploy, or GitHub Release action was
+performed.
+
+What shipped in this slice:
+
+- `docs/EVALUATOR_QUICKSTART.md` — now hands off from the safe bootstrap
+  path to the Acme/Globex demo docs and tells evaluators to keep using
+  the generated `.env` token.
+- `docs/DESIGN_PARTNER_QUICKSTART.md` — now separates the evaluator-safe
+  pull path from the local demo build path and makes the token choice
+  explicit.
+- `docs/DESIGN_PARTNER_EVALUATION_SCRIPT.md` — now gives the presenter
+  the same two run modes and removes HA hard-down overclaiming.
+- `docs/DEMO_SCRIPT.md` — now uses the same hard-down wording:
+  customer-side fallback is needed; Ward does not currently provide HA
+  for hard-down scenarios.
+- `docs/releases/v0.1.0-rc5.md` — records Slice 3 as complete and moves
+  the recommended next slice to screenshots/visual proof planning or
+  common-errors polish.
+
+Verification:
+
+| Command / check | Result |
+| --- | --- |
+| Required preflight (`git status --short`, branch, recent log, private-file checks) | Clean at start; branch `rc5-evaluator-experience`; private files ignored |
+| Documentation link check over changed evaluator docs | PASS — `missing_links []` |
+| Forbidden/stale-claim grep over README and evaluator docs | PASS — remaining hits are limitation/prototype contexts or explicit demo-token warnings; exact stale phrase grep returned no matches |
+| `npm run validate:openapi` | PASS — 14 paths, 13 schemas present |
+| `./scripts/verify-release.sh` | PASS — 20 sections passed, 0 failed, 0 skipped |
+
+Remaining RC5 scope:
+
+- RC5 is still not complete. Screenshots/visual proof and common-error
+  polish remain available follow-up slices.
+- No post-publish verifier script exists.
+
 ## Twelfth session (2026-07-06): RC5 evaluator experience planning
 
 RC5 was started as the Evaluator Experience checkpoint on branch

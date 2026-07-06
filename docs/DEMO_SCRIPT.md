@@ -120,8 +120,9 @@ Say these out loud, do not skip them:
   compliance-grade retention and export are planned, not shipped."
 - "If Ward is up but its policy lookup fails, requests pass through
   flagged and audited — fail-open, never silent. If the Ward process
-  itself is fully down, proxied traffic stops; an HA story is planned,
-  and we don't claim it yet."
+  itself is fully down, proxied traffic stops; surviving that needs
+  fallback routing on your side. Ward does not currently provide HA for
+  hard-down scenarios."
 
 ## Historical note
 

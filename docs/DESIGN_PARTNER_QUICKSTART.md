@@ -19,23 +19,24 @@ the Ward process itself is hard-down, proxied traffic does not flow;
 surviving that needs fallback routing on your side. Ward does not
 currently provide an HA path for hard-down scenarios.
 
-## 1. Run Ward (Docker only, no NPM)
+## 1. Choose the run mode
 
-```bash
-git clone <ward-repo> && cd ward
-docker compose -f docker-compose.user.yml up --build
-```
+Use one of these paths; do not mix their tokens:
 
-One container on port 4317. The prebuilt-image evaluator path lives in
-`docker-compose.pull.yml`; use `docs/EVALUATOR_QUICKSTART.md` when you
-want to pull the published image instead of building locally.
+| Mode | Use when | Command | Control token |
+| --- | --- | --- | --- |
+| Evaluator-safe pull path | You want the published image, explicit `.env`, and generated token | Follow `docs/EVALUATOR_QUICKSTART.md` first | `WARD_CONTROL_TOKEN` from `.env` |
+| Local demo build path | You are demoing from a checkout and accept local demo defaults | `docker compose -f docker-compose.user.yml up --build` | `ward-demo-token` |
+
+Both modes serve one Ward container on port 4317. The walkthrough below
+works in either mode; use the token for the mode you chose.
 
 ## 2. Open the Control Room
 
-http://localhost:4317 — served by the same container. Paste the demo
-control token `ward-demo-token` into the field at the top right. This
-token is local-demo convenience only; use a generated token from
-`docs/EVALUATOR_QUICKSTART.md` for evaluator-safe setup.
+http://localhost:4317 — served by the same container. Paste your control
+token into the field at the top right. In evaluator-safe mode this is
+the generated `WARD_CONTROL_TOKEN` from `.env`; in local demo build mode
+it is the demo token `ward-demo-token`.
 
 ## 3. Make an Acme request
 
