@@ -1,5 +1,58 @@
 # Ward Build Status
 
+## Fourteenth session (2026-07-06): Control Room light theme and themed visual proof
+
+Follow-up UI polish after the original RC5 evaluator-experience slice.
+This session changed only the Control Room frontend, screenshot capture
+tooling, visual-proof docs, and captured image assets. No API contract,
+OpenAPI contract, auth model, policy behavior, persistence model,
+compose stack, tag, push, publish, deploy, or GitHub Release action was
+performed.
+
+What shipped in this follow-up:
+
+- `apps/control-room/src/App.tsx` — persistent dark/light theme state,
+  `localStorage["ward_control_room_theme"]`, a theme toggle, and a
+  header regrouping that keeps `Local prototype control plane` and `not
+  production auth` visible.
+- `apps/control-room/src/styles.css` — tokenized dark/light colors while
+  preserving existing selectors used by E2E and screenshots:
+  `.tenant-row`, `.chip.running`, `.chip.constrained`, `.pressure-dot`,
+  `.kv`, `.approval-box`, `.empty`, `.audit-item`, `.panel`, and
+  `.header h1`.
+- `apps/control-room/playwright.screenshot.config.ts` — explicit
+  visual-proof Playwright config so screenshots stay out of the default
+  release verifier.
+- `apps/control-room/tests/screenshot.spec.ts` — captures ten current
+  themed PNGs in fresh per-theme browser contexts, seeding
+  `localStorage["ward_control_room_theme"]` with `addInitScript` before
+  the first navigation.
+- `docs/assets/rc5/control-room/*.png` — active visual proof for the
+  current UI: empty, pressure, operator-actions, approval, and contained
+  states in dark and light themes.
+- `docs/assets/rc5/evaluator/*.png` — retained as historical captures
+  from the previous RC5 visual-proof commit; superseded for current UI
+  review by `docs/assets/rc5/control-room/*.png`.
+- `docs/RC5_VISUAL_PROOF.md` — updated as the current visual-evidence
+  record with themed capture paths, light-theme mechanics, verification,
+  and remaining risks.
+
+Verification:
+
+| Command / check | Result |
+| --- | --- |
+| `cd apps/control-room && npx tsc --noEmit` | PASS — `EXIT=0` |
+| `cd apps/control-room && npx playwright test -c playwright.screenshot.config.ts --reporter=line` | PASS — 1 screenshot test passed |
+| `./scripts/verify-release.sh` | PASS — 20 sections passed, 0 failed, 0 skipped |
+
+Remaining RC5 scope:
+
+- RC5 evaluator-experience scope remains complete on this branch.
+- The light theme is a new UI surface; core storyboard states were
+  captured, but every error/disabled/overflow edge state has not been
+  exhaustively reviewed.
+
+
 ## Thirteenth session (2026-07-06): RC5 first-run and common-errors polish
 
 RC5 Slice 3 polished the written first-run and demo walkthrough path.

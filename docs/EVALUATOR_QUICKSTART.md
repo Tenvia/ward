@@ -179,10 +179,11 @@ generated `WARD_CONTROL_TOKEN`.
 ## Visual reference
 
 Captured screenshots of this quickstart path are in
-[`docs/RC5_VISUAL_PROOF.md`](RC5_VISUAL_PROOF.md) and the assets
-under `docs/assets/rc5/evaluator/`. The captures are real Playwright
-shots of the local Control Room on this commit; they are not
-production-readiness evidence.
+[`docs/RC5_VISUAL_PROOF.md`](RC5_VISUAL_PROOF.md). The active current UI
+assets are under `docs/assets/rc5/control-room/`; the older
+`docs/assets/rc5/evaluator/` captures are retained as historical
+pre-light-theme evidence. The captures are real Playwright shots of the
+local Control Room; they are not production-readiness evidence.
 
 ## What this proves
 

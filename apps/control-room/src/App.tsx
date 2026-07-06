@@ -18,6 +18,21 @@ import { DeploymentModeBadge } from "./components/DeploymentModeBadge";
 
 const POLL_INTERVAL_MS = 2000;
 
+type Theme = "dark" | "light";
+
+const THEME_STORAGE_KEY = "ward_control_room_theme";
+
+function initialTheme(): Theme {
+  const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
+  if (stored === "dark" || stored === "light") return stored;
+  return "dark";
+}
+
+function nextTheme(theme: Theme): Theme {
+  return theme === "dark" ? "light" : "dark";
+}
+
+
 export function App() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [runs, setRuns] = useState<WorkflowRun[]>([]);
@@ -25,6 +40,7 @@ export function App() {
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [theme, setTheme] = useState<Theme>(initialTheme);
 
   const refresh = useCallback(async () => {
     try {
@@ -50,31 +66,50 @@ export function App() {
     return () => clearInterval(handle);
   }, [refresh]);
 
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  }, [theme]);
+
   const selectedTenant =
     tenants.find((t) => t.tenantId === selectedTenantId) ?? tenants[0] ?? null;
 
   return (
     <>
-      <div className="header">
-        <h1>WARD CONTROL ROOM</h1>
-        {health ? <DeploymentModeBadge mode={health.deploymentMode} /> : null}
-        <span className="sub">
-          {health
-            ? `api ok / upstream ${health.upstreamMode}`
-            : "connecting to ward api..."}
-        </span>
-        <span className="sub">prototype - not production auth</span>
-        <span className="sub" style={{ marginLeft: "auto" }}>
-          <input
-            style={{ width: 180 }}
-            type="password"
-            placeholder="control token (if required)"
-            defaultValue={getControlToken()}
-            onChange={(e) => setControlToken(e.target.value)}
-            aria-label="control token"
-          />
-        </span>
-      </div>
+      <header className="header">
+        <div className="brand-block">
+          <div className="brand-row">
+            <h1>WARD CONTROL ROOM</h1>
+            {health ? <DeploymentModeBadge mode={health.deploymentMode} /> : null}
+          </div>
+          <div className="sub">
+            Local prototype control plane · API{" "}
+            {health ? <span className="status-ok">ok</span> : "connecting"} · upstream{" "}
+            {health?.upstreamMode ?? "unknown"} · not production auth
+          </div>
+        </div>
+        <div className="header-controls">
+          <label className="token-field">
+            <span>Control token</span>
+            <input
+              type="password"
+              placeholder="if required"
+              defaultValue={getControlToken()}
+              onChange={(e) => setControlToken(e.target.value)}
+              aria-label="control token"
+            />
+          </label>
+          <button
+            className="theme-toggle"
+            type="button"
+            onClick={() => setTheme((current) => nextTheme(current))}
+            aria-label={`switch to ${nextTheme(theme)} theme`}
+          >
+            {theme === "dark" ? "Light" : "Dark"}
+          </button>
+        </div>
+      </header>
       {connectionError ? (
         <div className="panel error-box" style={{ margin: 12 }}>
           Ward API unreachable at the configured base URL: {connectionError}
