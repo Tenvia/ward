@@ -70,9 +70,11 @@ Use this route when you are evaluating Ward cold:
 | 10-20 min | Verify the surface | Check `/health`, `/openapi.yaml`, the bundled Control Room, and control-auth rejection. |
 | 20-30 min | Prove containment and limits | Constrain Globex, confirm Acme still returns `200`, inspect audit, then read [claims](docs/CLAIMS_AND_EVIDENCE.md). |
 
-If something fails, go first to the quickstart's failure table and then
-the [operator runbook](docs/OPERATOR_RUNBOOK.md). Do not expose Ward
-publicly, and do not reuse `ward-demo-token` beyond a local demo.
+If something fails, go first to the quickstart's
+[common first-run issues](docs/EVALUATOR_QUICKSTART.md#common-first-run-issues)
+section and then the [operator runbook](docs/OPERATOR_RUNBOOK.md). Do
+not expose Ward publicly, and do not reuse `ward-demo-token` beyond a
+local demo.
 
 ## First 60 seconds
 

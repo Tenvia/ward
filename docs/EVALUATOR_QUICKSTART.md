@@ -150,15 +150,31 @@ authoritative evaluator-side persistence reference (what persists,
 what survives, offline backup and restore, `node:sqlite` caveats), see
 `docs/SQLITE_DEPLOYMENT.md`.
 
-## If a check fails
+## Common first-run issues
 
-| Symptom | First check | Likely cause | Safe action |
+Use this table before changing compose files or falling back to the demo
+token. The evaluator-safe path is still
+`docker compose --env-file .env -f docker-compose.pull.yml ...` with a
+generated `WARD_CONTROL_TOKEN`.
+
+| Symptom | Likely cause | Check | Fix / safety boundary |
 | --- | --- | --- | --- |
-| `/health` never returns | `docker compose --env-file .env -f docker-compose.pull.yml ps` | image pull failed, port 4317 already in use, or container crashed | inspect `docker compose --env-file .env -f docker-compose.pull.yml logs ward`; stop other process on 4317 |
-| Missing-token check returns `200` | `cat .env` and `/health` | `WARD_REQUIRE_CONTROL_TOKEN` was not set to `true` or compose did not read `.env` | stop, rerun with `--env-file .env`, confirm health controlAuth status |
-| Authenticated mutation returns `401` | compare shell `$WARD_CONTROL_TOKEN` to `.env` | token not loaded in shell or wrong token pasted into Control Room | reload `.env` with `set -a; . ./.env; set +a` |
-| Globex returns `200` after constrain | inspect constrain response and `/ward/tenants/tenant_globex` | constrain failed, wrong tenant ID, or resume already ran | rerun authenticated constrain and inspect audit |
-| Acme returns non-`200` | inspect `/health` and request body | Ward not healthy, malformed request, or proxy fail mode/upstream issue | retry with the exact command above; keep mock upstream unless testing pass-through |
+| Port `4317` is already in use | Another Ward/API/dev process is listening | `lsof -nP -iTCP:4317 -sTCP:LISTEN` | Stop the other process, then rerun `docker compose --env-file .env -f docker-compose.pull.yml up -d`. Do not switch compose files just to avoid the conflict. |
+| `/health` never returns | Docker is not running, pull failed, container crashed, or port conflict | `docker compose --env-file .env -f docker-compose.pull.yml ps` and `docker compose --env-file .env -f docker-compose.pull.yml logs ward` | Fix the concrete error. If Docker is down, start Docker. If the image pull failed, check `WARD_IMAGE` and network/GHCR access. |
+| Docker says it cannot connect to the daemon | Docker Desktop/daemon is not running | `docker info` | Start Docker, wait until `docker info` succeeds, then rerun the same compose command. Do not switch to NPM/dev mode just to bypass Docker. |
+| `docker compose ... pull` cannot fetch the image | Wrong/private/unavailable image tag or no registry/network access | `grep '^WARD_IMAGE=' .env` and `docker compose --env-file .env -f docker-compose.pull.yml pull` | Use the published RC4 image from this doc unless intentionally testing another tag. No GitHub login should be required for the public RC4 image. |
+| Compose command uses the wrong stack | Pull/user/root compose files look similar but carry different assumptions | `docker compose --env-file .env -f docker-compose.pull.yml config | grep -E 'image:|WARD_STORAGE|WARD_REQUIRE_CONTROL_TOKEN'` | Evaluator-safe pull path: `docker-compose.pull.yml` + `.env`. Local build demo: `docker-compose.user.yml`. Contributor three-service stack: root `docker-compose.yml`. |
+| Missing-token constrain returns `200` | `.env` was missing, compose ignored it, or auth was disabled | `grep -q '^WARD_REQUIRE_CONTROL_TOKEN=true$' .env && echo auth-required` and `curl -fsS http://localhost:4317/health | grep controlAuth` | Ensure `.env` contains `WARD_REQUIRE_CONTROL_TOKEN=true` and a generated `WARD_CONTROL_TOKEN`, then restart with `--env-file .env`. Do not paste token values into logs. |
+| Authenticated mutation returns `401` | Shell token not loaded, Control Room token field is wrong, or `.env` differs from the running container | `grep -q '^WARD_CONTROL_TOKEN=' .env && echo env-token-present`; `test -n "${WARD_CONTROL_TOKEN:-}" && echo shell-token-loaded` | Reload with `set -a; . ./.env; set +a`; paste the same generated token into the Control Room. Do not fix this by using `ward-demo-token` unless you intentionally restart in local demo mode. |
+| Control Room actions fail but curl works | Browser still has an old token in the Control Room field/local storage | Confirm curl succeeds with an `authorization: Bearer ...` header from the generated token | Paste the generated token from `.env` into the Control Room token field. If needed, clear the browser's stored token for `localhost:4317`. |
+| State looks stale or a tenant is already constrained/paused | SQLite volume from a prior run is still attached | `docker volume ls | grep ward-user-data` and `curl -fsS http://localhost:4317/ward/tenants/tenant_globex` | Resume/reset the tenant if you want to keep audit history. To wipe evaluator state, run `docker compose --env-file .env -f docker-compose.pull.yml down --volumes`. This deletes local SQLite state. |
+| OpenAPI command output is confusing | `npm run validate:openapi` validates the repo contract; `curl /openapi.yaml` verifies the running API serves it | `npm run validate:openapi` and `curl -fsS http://localhost:4317/openapi.yaml | head -n 1` | Use both when debugging docs vs running container. Expected first line from the running API is `openapi: 3.0.3`. |
+| `./scripts/verify-release.sh` fails or reports SKIPPED | Maintainer battery found a real failure or missing optional dependency | Re-read the verifier summary; it prints every PASS/FAIL/SKIP | Do not call SKIPPED green for release work. Run the failing section directly. For published-image checks, use `docs/POST_PUBLISH_VERIFICATION.md`. |
+| Smoke cleanup or verifier leaves a dev API behind | A local `tsx src/server.ts` process survived a failed smoke | `lsof -nP -iTCP:4317 -sTCP:LISTEN` | Stop the stray process. Last resort for local dev only: `pkill -f "tsx src/server.ts"`. Then rerun the failed command. |
+| Globex returns `200` after constrain | Constrain failed, wrong tenant ID, observe mode is active, or stale state was resumed | `curl -fsS http://localhost:4317/ward/tenants/tenant_globex` and `curl -fsS http://localhost:4317/health | grep -E 'wardMode|storage'` | Rerun authenticated constrain and inspect audit. If `WARD_MODE=observe`, a would-block `200` is intentional evidence, not enforcement. |
+| Acme returns non-`200` | Ward unhealthy, malformed request, fail-closed/policy error, upstream issue, or wrong stack | `curl -fsS http://localhost:4317/health` and retry the exact Acme command above | Keep the mock upstream for first evaluation. Real provider pass-through can spend money and is not full OpenAI compatibility. |
+| Ward is fully down | This is not degraded fail-open; the proxy process is unavailable | `curl -fsS http://localhost:4317/health` | Proxied traffic cannot pass through a down Ward process. Survival requires customer-side fallback routing; Ward does not currently provide HA for hard-down scenarios. |
+| You are tempted to use `ward-demo-token` | The evaluator-safe token path feels confusing | `grep -q '^WARD_CONTROL_TOKEN=' .env && echo env-token-present` | Stay on the generated-token path. `ward-demo-token` is local-demo convenience only for `docker-compose.user.yml` or pull compose without overrides; do not use it for evaluator-safe setup. |
 
 ## What this proves
 

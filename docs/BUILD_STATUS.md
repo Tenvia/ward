@@ -1,28 +1,37 @@
 # Ward Build Status
 
-## Thirteenth session (2026-07-06): RC5 first-run demo walkthrough polish
+## Thirteenth session (2026-07-06): RC5 first-run and common-errors polish
 
 RC5 Slice 3 polished the written first-run and demo walkthrough path.
-This session stayed documentation-only: no runtime code, contract,
-compose, tag, push, publish, deploy, or GitHub Release action was
-performed.
+RC5 Slice 5 then added common first-run troubleshooting without changing
+runtime behavior. This session stayed documentation-only: no runtime
+code, contract, compose, tag, push, publish, deploy, or GitHub Release
+action was performed.
 
-What shipped in this slice:
+What shipped in these slices:
 
 - `docs/EVALUATOR_QUICKSTART.md` — now hands off from the safe bootstrap
-  path to the Acme/Globex demo docs and tells evaluators to keep using
-  the generated `.env` token.
+  path to the Acme/Globex demo docs, tells evaluators to keep using the
+  generated `.env` token, and includes a common first-run issues table
+  covering port conflicts, Docker daemon failures, image pull failures,
+  wrong compose stack, missing/disabled control auth, wrong/stale
+  Control Room token, stale SQLite volume, OpenAPI command confusion,
+  verifier/smoke cleanup, containment mismatch, Acme failure,
+  hard-down vs degraded fail-open, and demo-token temptation.
+- `README.md` — now routes first-run failures to the evaluator
+  quickstart's common-issues table before the deeper operator runbook.
 - `docs/DESIGN_PARTNER_QUICKSTART.md` — now separates the evaluator-safe
-  pull path from the local demo build path and makes the token choice
-  explicit.
+  pull path from the local demo build path, makes the token choice
+  explicit, and points failed Control Room actions back to the generated
+  token path.
 - `docs/DESIGN_PARTNER_EVALUATION_SCRIPT.md` — now gives the presenter
   the same two run modes and removes HA hard-down overclaiming.
 - `docs/DEMO_SCRIPT.md` — now uses the same hard-down wording:
   customer-side fallback is needed; Ward does not currently provide HA
   for hard-down scenarios.
-- `docs/releases/v0.1.0-rc5.md` — records Slice 3 as complete and moves
-  the recommended next slice to screenshots/visual proof planning or
-  common-errors polish.
+- `docs/releases/v0.1.0-rc5.md` — records Slice 3 and Slice 5 as
+  complete and moves the recommended next slice to screenshots/visual
+  proof planning.
 
 Verification:
 
@@ -36,8 +45,8 @@ Verification:
 
 Remaining RC5 scope:
 
-- RC5 is still not complete. Screenshots/visual proof and common-error
-  polish remain available follow-up slices.
+- RC5 is still not complete. Screenshots/visual proof remains the
+  available follow-up slice.
 - No post-publish verifier script exists.
 
 ## Twelfth session (2026-07-06): RC5 evaluator experience planning

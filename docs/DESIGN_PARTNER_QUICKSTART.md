@@ -38,6 +38,10 @@ token into the field at the top right. In evaluator-safe mode this is
 the generated `WARD_CONTROL_TOKEN` from `.env`; in local demo build mode
 it is the demo token `ward-demo-token`.
 
+If the Control Room action fails, check the token for the mode you
+chose before changing modes. Evaluator-safe recovery lives in
+`docs/EVALUATOR_QUICKSTART.md#common-first-run-issues`.
+
 ## 3. Make an Acme request
 
 ```bash
