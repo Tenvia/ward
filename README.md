@@ -6,10 +6,10 @@
 
 **Pause one customer's AI agents. Everyone else keeps running.**
 
-[![release](https://img.shields.io/badge/release-v0.1.0--rc3-1e56d6)](docs/releases/v0.1.0-rc3.md)
+[![release](https://img.shields.io/badge/release-v0.1.0--rc4-1e56d6)](docs/releases/v0.1.0-rc4.md)
 [![install](https://img.shields.io/badge/install-docker%2C_no_npm-2496ED?logo=docker&logoColor=white)](docs/USER_INSTALL_NO_NPM.md)
 [![contract](https://img.shields.io/badge/API-OpenAPI_v0-6BA539?logo=openapiinitiative&logoColor=white)](openapi/ward.v0.yaml)
-[![verification](https://img.shields.io/badge/RC3_battery-passing-3fb950)](docs/BUILD_STATUS.md)
+[![verification](https://img.shields.io/badge/RC4_battery-passing-3fb950)](docs/BUILD_STATUS.md)
 [![status](https://img.shields.io/badge/status-prototype-d29922)](docs/CLAIMS_AND_EVIDENCE.md)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
@@ -19,7 +19,7 @@
 [What's not](#what-ward-is-not) ·
 [API Contract](openapi/ward.v0.yaml) ·
 [Claims Ledger](docs/CLAIMS_AND_EVIDENCE.md) ·
-[Release Notes](docs/releases/v0.1.0-rc3.md)
+[Release Notes](docs/releases/v0.1.0-rc4.md)
 
 </div>
 
@@ -61,7 +61,7 @@ prototype check, not production deployment guidance.
 ```bash
 # 1. Create an explicit evaluator env file.
 cat > .env <<'EOF'
-WARD_IMAGE=ghcr.io/tenvia/ward-api:v0.1.0-rc3
+WARD_IMAGE=ghcr.io/tenvia/ward-api:v0.1.0-rc4
 WARD_REQUIRE_CONTROL_TOKEN=true
 WARD_STORAGE=sqlite
 WARD_PROXY_FAIL_MODE=open

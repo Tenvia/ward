@@ -40,7 +40,7 @@ Set the image once. The published tag is the unit of identity; the
 digest and revision label are recorded in the release notes.
 
 ```bash
-WARD_IMAGE="${WARD_IMAGE:-ghcr.io/tenvia/ward-api:v0.1.0-rc3}"
+WARD_IMAGE="${WARD_IMAGE:-ghcr.io/tenvia/ward-api:v0.1.0-rc4}"
 WARD_PORT="${WARD_PORT:-4317}"
 ```
 

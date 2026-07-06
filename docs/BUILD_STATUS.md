@@ -1,5 +1,44 @@
 # Ward Build Status
 
+## Eleventh session (2026-07-06): RC4 deployment readiness publish
+
+RC4 was committed, tagged, pushed, published to GHCR, and verified as a
+local/container prototype release candidate. No GitHub Release object
+was created.
+
+What shipped:
+
+- `3568a33` — `Document Ward v0.1.0-rc4 deployment readiness`.
+- Annotated tag `v0.1.0-rc4` pushed to origin.
+- GHCR image `ghcr.io/tenvia/ward-api:v0.1.0-rc4` published by
+  workflow run `28788429438`, job `85360723264`.
+- Image digest:
+  `sha256:3fc673d67c983befc0b3798e7f1c8a7213a6c0c3c24ef3600f816789ed819aff`.
+- OCI revision label:
+  `3568a33dd9bde20cd7abe846043346f4d2052491`.
+- Platforms verified anonymously from the manifest index:
+  `linux/amd64` and `linux/arm64`.
+
+Verification:
+
+| Command / check | Result |
+| --- | --- |
+| `./scripts/verify-release.sh` before tagging | 20 sections PASS, 0 failed, 0 skipped |
+| `gh run watch 28788429438 --repo Tenvia/ward --exit-status` | workflow passed |
+| Anonymous GHCR token request | 200 |
+| GHCR tags list | contains `0.1.0-rc4` and `v0.1.0-rc4` |
+| Anonymous manifest fetch for `v0.1.0-rc4` | 200; digest above |
+| `docker compose -f docker-compose.pull.yml pull` with `WARD_IMAGE=ghcr.io/tenvia/ward-api:v0.1.0-rc4` | pulled |
+| Pulled image `/health` | `status: ok`, `storage: sqlite`, control auth required, Control Room bundled, OpenAPI served |
+| Pulled image `/openapi.yaml` and `/` | OpenAPI served; Control Room root present |
+| Pulled image control auth | missing token 401; bearer token mutation 200 |
+| Pulled image containment | Globex 429 while Acme 200 |
+| Pulled image restart persistence | after compose restart, Globex still 429, Acme 200, audit retained |
+
+Scope remains prototype-only: not production-ready, not hosted, not HA,
+not compliance-ready, not enterprise RBAC, not tamper-proof, not full
+OpenAI compatibility, and not real-upstream pass-through streaming.
+
 ## Tenth session (2026-07-05): RC3 docs + claims sync
 
 Docs-only session following the RC3 implementation (Slices 1–6). No code,

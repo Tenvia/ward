@@ -1,6 +1,6 @@
 # Ward via the PREBUILT image published to GHCR.
 #
-# STATUS: ghcr.io/tenvia/ward-api:v0.1.0-rc3 is the latest published
+# STATUS: ghcr.io/tenvia/ward-api:v0.1.0-rc4 is the latest published
 # prototype baseline recorded in docs/PUBLISH_READINESS.md. This pull
 # compose path is for local/container evaluation only:
 #
@@ -22,7 +22,7 @@ services:
   ward:
     # Repo lives in the Tenvia GitHub org (github.com/Tenvia/ward);
     # GHCR namespaces are lowercase.
-    image: "${WARD_IMAGE:-ghcr.io/tenvia/ward-api:v0.1.0-rc3}"
+    image: "${WARD_IMAGE:-ghcr.io/tenvia/ward-api:v0.1.0-rc4}"
     ports:
       - "4317:4317"
     environment:

@@ -19,7 +19,7 @@ Minimal pull path:
 git clone https://github.com/Tenvia/ward
 cd ward
 cat > .env <<'EOF'
-WARD_IMAGE=ghcr.io/tenvia/ward-api:v0.1.0-rc3
+WARD_IMAGE=ghcr.io/tenvia/ward-api:v0.1.0-rc4
 WARD_REQUIRE_CONTROL_TOKEN=true
 WARD_STORAGE=sqlite
 WARD_PROXY_FAIL_MODE=open

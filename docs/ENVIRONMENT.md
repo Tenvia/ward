@@ -35,7 +35,7 @@ Optional when using `docker-compose.pull.yml` and pinning a specific
 published image:
 
 ```bash
-WARD_IMAGE=ghcr.io/tenvia/ward-api:v0.1.0-rc3
+WARD_IMAGE=ghcr.io/tenvia/ward-api:v0.1.0-rc4
 ```
 
 Rules:
@@ -89,7 +89,7 @@ categories directly:
 | `WARD_UI_DIR` | Optional packaging/internal; API, Control Room bundle | Overrides bundled Control Room asset directory. | No | `ui` in the image. Example in packaging only: `WARD_UI_DIR=ui`. | Not needed for evaluators. | No. | Missing uses `ui`. Wrong path makes `/` return the missing-assets JSON instead of the Control Room; `/health.controlRoomBundled` is false. |
 | `VITE_WARD_API_URL` | Optional developer build-time; Control Room | API base URL for separately served Vite UI. | No | Same origin when bundled; Vite dev uses `http://localhost:4317`. Example: `VITE_WARD_API_URL=http://localhost:4317`. | Yes in local dev. | No. | Missing works for bundled UI and normal Vite dev. Wrong value points the UI at the wrong API. |
 | `VITE_WARD_CONTROL_TOKEN` | Prototype/dev-only build-time; Control Room | Seeds the Control Room token field at build time; localStorage wins at runtime. | No | Empty. Example only for local demo builds. | Safe only with demo/local tokens. | Do not embed real tokens in built assets. | Missing leaves token field empty. Wrong value causes 401 until operator pastes the correct token. |
-| `WARD_IMAGE` | Optional; deployment/process; pull compose, post-publish verifier docs | Pins the prebuilt image used by `docker-compose.pull.yml`. | No | Compose default is `ghcr.io/tenvia/ward-api:v0.1.0-rc3`. Example: same. | Yes. | Pin deliberately for repeatable evaluation. | Missing uses compose default. Wrong/private/unpublished image makes `docker compose pull/up` fail. |
+| `WARD_IMAGE` | Optional; deployment/process; pull compose, post-publish verifier docs | Pins the prebuilt image used by `docker-compose.pull.yml`. | No | Compose default is `ghcr.io/tenvia/ward-api:v0.1.0-rc4`. Example: same. | Yes. | Pin deliberately for repeatable evaluation. | Missing uses compose default. Wrong/private/unpublished image makes `docker compose pull/up` fail. |
 | `WARD_IMAGE_NAME` | Optional maintainer build-only; image build script | Image repository for local multi-arch build validation. | No | `ghcr.io/tenvia/ward-api`. Example: `WARD_IMAGE_NAME=ghcr.io/tenvia/ward-api`. | Maintainer-only. | No; script does not push. | Missing uses script default. Wrong name only affects local build tag. |
 | `WARD_IMAGE_TAG` | Optional maintainer build-only; image build script | Image tag for local build validation. | No | `dev`. Example: `WARD_IMAGE_TAG=dev`. | Maintainer-only. | No; publishing is not controlled by this variable. | Missing uses script default. Wrong tag only affects local build tag. |
 | `WARD_API_URL` | Optional; runner/test/smoke; `wardctl`, smokes, incident export API mode | Points local tools at a running Ward API. | No | `http://localhost:4317`. Example: `WARD_API_URL=http://localhost:4317`. | Yes. | No. | Missing uses tool defaults. Wrong URL makes tools fail connection or hit the wrong Ward instance. |
@@ -144,7 +144,7 @@ These variables are consumed by compose files or image-build tooling.
 
 | Variable | Category | Default | Used by | Effect and safety notes |
 | --- | --- | --- | --- | --- |
-| `WARD_IMAGE` | optional image pin | compose-file default | `docker-compose.pull.yml` | Overrides the prebuilt image. Use this to pin a specific RC, e.g. `ghcr.io/tenvia/ward-api:v0.1.0-rc3`. |
+| `WARD_IMAGE` | optional image pin | compose-file default | `docker-compose.pull.yml` | Overrides the prebuilt image. Use this to pin a specific RC, e.g. `ghcr.io/tenvia/ward-api:v0.1.0-rc4`. |
 | `WARD_IMAGE_NAME` | maintainer build-only | `ghcr.io/tenvia/ward-api` | `scripts/build-image.sh multiarch` | Names the image for a local multi-arch build validation. The script never pushes. |
 | `WARD_IMAGE_TAG` | maintainer build-only | `dev` | `scripts/build-image.sh multiarch` | Tags the image for a local multi-arch build validation. Publishing happens only via GitHub Actions on version tags or manual dispatch. |
 

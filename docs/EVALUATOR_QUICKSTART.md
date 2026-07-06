@@ -25,7 +25,7 @@ Run from the repository root after cloning Ward.
 ```bash
 # 1. Create an explicit evaluator env file.
 cat > .env <<'EOF'
-WARD_IMAGE=ghcr.io/tenvia/ward-api:v0.1.0-rc3
+WARD_IMAGE=ghcr.io/tenvia/ward-api:v0.1.0-rc4
 WARD_REQUIRE_CONTROL_TOKEN=true
 WARD_STORAGE=sqlite
 WARD_PROXY_FAIL_MODE=open
