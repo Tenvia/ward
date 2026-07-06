@@ -70,6 +70,18 @@ Use this route when you are evaluating Ward cold:
 | 10-20 min | Verify the surface | Check `/health`, `/openapi.yaml`, the bundled Control Room, and control-auth rejection. Visual reference: [RC5 visual proof](docs/RC5_VISUAL_PROOF.md). |
 | 20-30 min | Prove containment and limits | Constrain Globex, confirm Acme still returns `200`, inspect audit, then read [claims](docs/CLAIMS_AND_EVIDENCE.md). |
 
+### Visual proof
+
+These are real Playwright captures of the local Control Room against the
+bundled mock-upstream API on this commit. They are not
+production-readiness evidence, do not show real upstream pass-through,
+and do not replace the full [RC5 visual proof](docs/RC5_VISUAL_PROOF.md),
+which carries both dark and light themes.
+
+| Empty state | Pressure detected | Globex contained, Acme running |
+| --- | --- | --- |
+| ![Control Room empty state with no tenants tracked yet](docs/assets/rc5/control-room/control-room-empty-dark.png) | ![Control Room showing tenant_globex pressure detected after repeated requests](docs/assets/rc5/control-room/control-room-pressure-dark.png) | ![Control Room showing tenant_globex constrained while tenant_acme remains running](docs/assets/rc5/control-room/control-room-contained-dark.png) |
+
 If something fails, go first to the quickstart's
 [common first-run issues](docs/EVALUATOR_QUICKSTART.md#common-first-run-issues)
 section and then the [operator runbook](docs/OPERATOR_RUNBOOK.md). Do
