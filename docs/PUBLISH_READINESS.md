@@ -79,6 +79,12 @@ semver + `latest` (default branch only) tags.
 
 ## Post-publish verification (performed for v0.1.0-rc1; repeat per publish)
 
+The repeatable, copy/paste post-publish check lives in
+`docs/POST_PUBLISH_VERIFICATION.md`. Use it after every published
+tag. The steps there are the source of truth for what the future
+`scripts/post-publish-verify.sh` and any extension of
+`scripts/verify-release.sh` must do.
+
 ```bash
 docker logout ghcr.io   # verify anonymous pull works for a public package
 docker compose -f docker-compose.pull.yml pull

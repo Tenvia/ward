@@ -361,6 +361,12 @@ pkill -f "tsx src/server.ts"  # last resort for stray dev API
 
 If Docker is not running, start Docker, then re-run the verifier.
 
+For a *published* image (post-publish), the in-repo verifier is not
+enough: the `docs/POST_PUBLISH_VERIFICATION.md` flow covers anonymous
+pull, image-only boot, served contract, and tear-down. Both checks
+must be clean before any tag is announced; the in-repo verifier
+remains the single release authority.
+
 **When to stop trusting the prototype:**
 
 - The verifier must be clean (PASS, zero SKIPPED) before any RC
