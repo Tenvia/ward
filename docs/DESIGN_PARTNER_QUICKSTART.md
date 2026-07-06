@@ -16,8 +16,8 @@ traffic keeps flowing.
 Prototype auth (one shared token, not RBAC). Single-node,
 prototype/demo-supported operation — not production-ready, no SLA. If
 the Ward process itself is hard-down, proxied traffic does not flow;
-surviving that needs fallback routing on your side or an HA deployment
-(planned). Cost figures are estimates, not metering.
+surviving that needs fallback routing on your side. Ward does not
+currently provide an HA path for hard-down scenarios.
 
 ## 1. Run Ward (Docker only, no NPM)
 
@@ -26,14 +26,16 @@ git clone <ward-repo> && cd ward
 docker compose -f docker-compose.user.yml up --build
 ```
 
-One container on port 4317. (A prebuilt image path exists at
-`docker-compose.pull.yml` and activates once the first image is
-published.)
+One container on port 4317. The prebuilt-image evaluator path lives in
+`docker-compose.pull.yml`; use `docs/EVALUATOR_QUICKSTART.md` when you
+want to pull the published image instead of building locally.
 
 ## 2. Open the Control Room
 
 http://localhost:4317 — served by the same container. Paste the demo
-control token `ward-demo-token` into the field at the top right.
+control token `ward-demo-token` into the field at the top right. This
+token is local-demo convenience only; use a generated token from
+`docs/EVALUATOR_QUICKSTART.md` for evaluator-safe setup.
 
 ## 3. Make an Acme request
 

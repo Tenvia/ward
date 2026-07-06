@@ -13,6 +13,7 @@
 [![status](https://img.shields.io/badge/status-prototype-d29922)](docs/CLAIMS_AND_EVIDENCE.md)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
+[Evaluate in 30 minutes](#evaluate-in-30-minutes) ·
 [Quickstart](#first-60-seconds) ·
 [Install](#install-no-npm) ·
 [Integrate](#integrate-your-existing-saas) ·
@@ -51,6 +52,27 @@ your SaaS ──(x-ward-tenant-id)──> Ward proxy ──> LLM / tool APIs
 - **No NPM for users** — one container serves API + Control Room.
 - The TypeScript SDK (cooperative `guard()`) is optional, never
   required.
+
+## Evaluate in 30 minutes
+
+Start with the [evaluator quickstart](docs/EVALUATOR_QUICKSTART.md) if
+you want the safest copy/paste path. It creates an explicit `.env`,
+generates a local control token, pulls the published image, verifies
+health/OpenAPI/Control Room, proves Globex is contained while Acme still
+works, and tears down cleanly.
+
+Use this route when you are evaluating Ward cold:
+
+| Time | Goal | Path |
+| --- | --- | --- |
+| 0-3 min | Understand the wedge | Read the problem statement above and [what Ward is not](#what-ward-is-not). |
+| 3-10 min | Boot the prototype safely | Run [First 60 seconds](#first-60-seconds) or the full [evaluator quickstart](docs/EVALUATOR_QUICKSTART.md). |
+| 10-20 min | Verify the surface | Check `/health`, `/openapi.yaml`, the bundled Control Room, and control-auth rejection. |
+| 20-30 min | Prove containment and limits | Constrain Globex, confirm Acme still returns `200`, inspect audit, then read [claims](docs/CLAIMS_AND_EVIDENCE.md). |
+
+If something fails, go first to the quickstart's failure table and then
+the [operator runbook](docs/OPERATOR_RUNBOOK.md). Do not expose Ward
+publicly, and do not reuse `ward-demo-token` beyond a local demo.
 
 ## First 60 seconds
 
@@ -163,7 +185,7 @@ x-ward-tenant-id: <your customer id>
 Details and honest guarantees:
 [EXISTING_SAAS_INTEGRATION.md](docs/EXISTING_SAAS_INTEGRATION.md).
 
-## What's not — and that's by design
+## What Ward is not
 
 Ward is **deliberately not**:
 
@@ -187,7 +209,7 @@ Ward is **deliberately not**:
 
 | Reader | Start here | Then |
 | --- | --- | --- |
-| Trying it tonight | [USER_INSTALL_NO_NPM](docs/USER_INSTALL_NO_NPM.md) | [DESIGN_PARTNER_QUICKSTART](docs/DESIGN_PARTNER_QUICKSTART.md) |
+| Trying it tonight | [EVALUATOR_QUICKSTART](docs/EVALUATOR_QUICKSTART.md) | [USER_INSTALL_NO_NPM](docs/USER_INSTALL_NO_NPM.md) |
 | Integrating your SaaS | [EXISTING_SAAS_INTEGRATION](docs/EXISTING_SAAS_INTEGRATION.md) | [ARCHITECTURE](docs/ARCHITECTURE.md) |
 | Operating Ward | [DEPLOYMENT_MODEL](docs/DEPLOYMENT_MODEL.md) | [DOCKER_RUNBOOK](docs/DOCKER_RUNBOOK.md) |
 | Writing code / contributing | This repo, `apps/api/src/server.ts` | [RELEASE_CANDIDATE_CHECKLIST](docs/RELEASE_CANDIDATE_CHECKLIST.md) |

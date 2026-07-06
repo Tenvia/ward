@@ -1,5 +1,43 @@
 # Ward Build Status
 
+## Twelfth session (2026-07-06): RC5 evaluator experience planning
+
+RC5 was started as the Evaluator Experience checkpoint on branch
+`rc5-evaluator-experience`. This session stayed documentation-only:
+no runtime code, contract, compose, tag, push, publish, deploy, or
+GitHub Release action was performed.
+
+What shipped in this slice:
+
+- `docs/releases/v0.1.0-rc5.md` — RC5 product question, promise,
+  first-30-minute evaluator journey, proposed slices, acceptance
+  criteria, verification proposal, claim language, and open risks.
+- `README.md` — new top-level `Evaluate in 30 minutes` route and
+  clearer routing from the reader table to the evaluator quickstart.
+- `docs/DESIGN_PARTNER_QUICKSTART.md` — refreshed the prebuilt-image
+  guidance now that RC4 is published, clarified the demo token as local
+  convenience only, and removed misleading HA-deployment wording.
+- `docs/USER_INSTALL_NO_NPM.md` — removed misleading HA-deployment
+  wording from the hard-down limitation note.
+
+Verification:
+
+| Command / check | Result |
+| --- | --- |
+| Required preflight (`git status --short`, branch, recent log, RC tags, private-file checks, docs listing) | Clean at start; branch `rc5-evaluator-experience`; RC tags `v0.1.0-rc1` through `v0.1.0-rc4`; private files ignored |
+| `npm run validate:openapi` | PASS — 14 paths, 13 schemas present |
+| Forbidden/stale-claim grep over README and evaluator docs | PASS — remaining hits are limitation/planned/prototype contexts or literal curl endpoints; stale HA hard-down and prebuilt-image activation wording removed |
+| `./scripts/verify-release.sh` | PASS — 20 sections passed, 0 failed, 0 skipped |
+
+Remaining RC5 scope:
+
+- RC5 is not complete; the plan recommends the next slice continue
+  evaluator-experience polish without expanding production claims.
+- Screenshots or visual proof are still undecided; no fake screenshots
+  were added.
+- Post-publish verification remains manual; no
+  `scripts/post-publish-verify.sh` exists.
+
 ## Eleventh session (2026-07-06): RC4 deployment readiness publish
 
 RC4 was committed, tagged, pushed, published to GHCR, and verified as a

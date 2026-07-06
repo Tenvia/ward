@@ -124,7 +124,8 @@ gates live in `docs/RELEASE_CANDIDATE_CHECKLIST.md`.
 - Not production-ready: single node, prototype auth, prototype
   persistence, no HA. If the Ward container is down, proxied traffic
   does not flow — hard-down survival needs customer-side fallback
-  routing or an HA deployment (planned).
+  routing. Ward does not currently provide an HA path for hard-down
+  scenarios.
 
 ## Future runtime direction
 
