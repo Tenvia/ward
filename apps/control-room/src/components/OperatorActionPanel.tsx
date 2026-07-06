@@ -138,7 +138,7 @@ export function OperatorActionPanel({
         </div>
       ) : null}
       <div className="row">
-        <span className="muted">Direct (no approval token):</span>
+        <span className="muted">Direct (skips approval — demo only):</span>
       </div>
       <div className="row">
         <button className="warn" onClick={() => void handleDirect("constrain")} disabled={busy}>

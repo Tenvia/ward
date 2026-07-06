@@ -32,6 +32,24 @@ What shipped in these slices:
 - `docs/releases/v0.1.0-rc5.md` — records Slice 3 and Slice 5 as
   complete and moves the recommended next slice to screenshots/visual
   proof planning.
+- `apps/control-room/tests/screenshot.spec.ts` — Playwright spec that
+  captures five PNGs of the local Control Room against the bundled
+  mock-upstream API. Reuses the existing `webServer` block in
+  `playwright.config.ts`; no new API or UI server management.
+- `docs/assets/rc5/evaluator/*.png` — real captured screenshots for
+  cold load, pressure detection, operator actions, approval flow, and
+  contained state.
+- `docs/RC5_VISUAL_PROOF.md` — visual-evidence record. Records what
+  was captured, what each capture does and does not prove, the
+  cold-evaluator findings, the bounded UI/UX improvements made, and
+  the deferred improvements for the next iteration.
+- `apps/control-room/src/components/OperatorActionPanel.tsx` — one
+  bounded copy relabel: "Direct (no approval token):" to "Direct
+  (skips approval — demo only):" so the approval flow stays the
+  visually primary path.
+- `docs/releases/v0.1.0-rc5.md` — records Slice 4 (visual proof +
+  bounded UI/UX polish) as complete and marks RC5
+  evaluator-experience scope as complete on this branch.
 
 Verification:
 
@@ -42,11 +60,13 @@ Verification:
 | Forbidden/stale-claim grep over README and evaluator docs | PASS — remaining hits are limitation/prototype contexts or explicit demo-token warnings; exact stale phrase grep returned no matches |
 | `npm run validate:openapi` | PASS — 14 paths, 13 schemas present |
 | `./scripts/verify-release.sh` | PASS — 20 sections passed, 0 failed, 0 skipped |
+| Playwright screenshot spec (`apps/control-room/tests/screenshot.spec.ts`) | PASS when invoked on demand via `npx playwright test -g "captures the local evaluator"`; excluded from the default verifier run via `testIgnore` in `playwright.config.ts`. See `docs/RC5_VISUAL_PROOF.md` for the capture command. |
 
 Remaining RC5 scope:
 
-- RC5 is still not complete. Screenshots/visual proof remains the
-  available follow-up slice.
+- RC5 evaluator-experience scope is complete on this branch. The
+  bounded follow-ups recorded in `docs/RC5_VISUAL_PROOF.md` are
+  documented there and were not pulled into this slice.
 - No post-publish verifier script exists.
 
 ## Twelfth session (2026-07-06): RC5 evaluator experience planning

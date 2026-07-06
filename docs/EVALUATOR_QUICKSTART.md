@@ -176,12 +176,20 @@ generated `WARD_CONTROL_TOKEN`.
 | Ward is fully down | This is not degraded fail-open; the proxy process is unavailable | `curl -fsS http://localhost:4317/health` | Proxied traffic cannot pass through a down Ward process. Survival requires customer-side fallback routing; Ward does not currently provide HA for hard-down scenarios. |
 | You are tempted to use `ward-demo-token` | The evaluator-safe token path feels confusing | `grep -q '^WARD_CONTROL_TOKEN=' .env && echo env-token-present` | Stay on the generated-token path. `ward-demo-token` is local-demo convenience only for `docker-compose.user.yml` or pull compose without overrides; do not use it for evaluator-safe setup. |
 
+## Visual reference
+
+Captured screenshots of this quickstart path are in
+[`docs/RC5_VISUAL_PROOF.md`](RC5_VISUAL_PROOF.md) and the assets
+under `docs/assets/rc5/evaluator/`. The captures are real Playwright
+shots of the local Control Room on this commit; they are not
+production-readiness evidence.
+
 ## What this proves
 
 This quickstart proves the local/container prototype can be pulled,
 configured with explicit env vars, booted, health-checked, contract-
-checked, operated with shared-token control auth, and used to contain one
-tenant while another tenant still succeeds.
+checked, operated with shared-token control auth, and used to contain
+one tenant while another tenant still succeeds.
 
 ## What this does not prove
 

@@ -67,7 +67,7 @@ Use this route when you are evaluating Ward cold:
 | --- | --- | --- |
 | 0-3 min | Understand the wedge | Read the problem statement above and [what Ward is not](#what-ward-is-not). |
 | 3-10 min | Boot the prototype safely | Run [First 60 seconds](#first-60-seconds) or the full [evaluator quickstart](docs/EVALUATOR_QUICKSTART.md). |
-| 10-20 min | Verify the surface | Check `/health`, `/openapi.yaml`, the bundled Control Room, and control-auth rejection. |
+| 10-20 min | Verify the surface | Check `/health`, `/openapi.yaml`, the bundled Control Room, and control-auth rejection. Visual reference: [RC5 visual proof](docs/RC5_VISUAL_PROOF.md). |
 | 20-30 min | Prove containment and limits | Constrain Globex, confirm Acme still returns `200`, inspect audit, then read [claims](docs/CLAIMS_AND_EVIDENCE.md). |
 
 If something fails, go first to the quickstart's
