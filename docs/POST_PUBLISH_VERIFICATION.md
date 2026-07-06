@@ -88,9 +88,10 @@ Expected health facts:
 - `service` is `ward-api`
 - `controlRoomBundled` is `true`
 - `openapi.served` is `true`
-- `storage` is `memory` (or `sqlite` if `WARD_STORAGE=sqlite` was set
-  in the boot environment)
-- `controlAuth` reports whatever the image default is
+- `storage` is `sqlite` when booted through `docker-compose.pull.yml`
+  (the SQLite file lives on the `ward-user-data` named volume)
+- `controlAuth` is required with a shared bearer token prototype when
+  booted through `docker-compose.pull.yml`
 
 Step 4 — confirm OpenAPI and Control Room are served.
 
@@ -107,11 +108,12 @@ Expected:
 - `/openapi.json` returns a JSON object starting with `{`.
 - `/` contains the Control Room mount point.
 
-Step 5 — control auth probe (if enabled).
+Step 5 — control auth probe.
 
-The published image defaults control auth to off. To exercise the
-auth path against a pulled image, set the env vars in a fresh boot
-and re-probe:
+`docker-compose.pull.yml` enables control auth by default, but its
+fallback token is `ward-demo-token`. For post-publish verification,
+override it in a fresh boot so the check proves the auth path without
+reusing the demo token:
 
 ```bash
 WARD_IMAGE="${WARD_IMAGE}" \

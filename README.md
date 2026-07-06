@@ -222,7 +222,7 @@ npm run smoke:sdk                    # SDK guard + fail modes
 npm run smoke:observe-only           # observe-mode would-block evidence (RC2)
 npm run smoke:pass-through:mock      # forwardToUpstream against a local mock (RC2)
 npm run smoke:streaming:mock         # deterministic mock SSE, enforcement first (RC2)
-npm run test:unit                    # 10 suites, 53 unit checks
+npm run test:unit                    # API unit suite
 npm run smoke:audit-durability       # SQLite audit survives restart (RC3)
 npm run smoke:tenant-mode-override   # per-tenant observe/enforce override (RC3)
 npm run smoke:incident-receipt       # Markdown incident receipt from audit (RC3)
@@ -232,30 +232,16 @@ npm run bench:latency                # local p50/p95 across mock + observe paths
 cd apps/control-room && npm run test:e2e && npm run test:e2e:auth
 ```
 
-`scripts/verify-release.sh` runs a curated subset (entry points,
-typechecks, contract validation, demo / sdk / reliability / openapi
-`scripts/verify-release.sh` runs a curated subset that now includes
-all four RC3 prototype smokes (`smoke:audit-durability`,
-`smoke:tenant-mode-override`, `smoke:incident-receipt`,
-`smoke:rc3-failure-behavior`). Running them via `npm run smoke:*`
-directly covers the same ground and is fine for greenfield
-verification.
+`scripts/verify-release.sh` is the maintainer release gate. It runs
+OpenAPI validation, typechecks, package builds, the demo / SDK /
+OpenAPI / reliability smokes, all four RC3 prototype smokes, browser
+E2Es when Playwright is installed, compose config checks, a local image
+build, and the no-NPM user install smoke. It reports every PASS, FAIL,
+and SKIPPED section explicitly.
 
-## What you'd see when each smoke passes
-
-Every RC3 smoke prints a single summary line plus PASS / FAIL rows
-per check. After a clean run you should see:
-
-| Smoke | Summary line |
-| --- | --- |
-| `smoke:audit-durability` | `Audit durability smoke: 44 passed, 0 failed.` |
-| `smoke:tenant-mode-override` | `Tenant mode override smoke: 38 passed, 0 failed.` |
-| `smoke:incident-receipt` | `Incident receipt smoke: 20 passed, 0 failed.` |
-| `smoke:rc3-failure-behavior` | `RC3 failure-behavior smoke: 37 passed, 0 failed.` |
-
-If your run shows different numbers, something changed. Re-run
-`npm run test:unit` first to surface contract drift; if it's green,
-check `docs/BUILD_STATUS.md` for the last-known-good totals.
+Each smoke prints its own pass/fail count. Prefer the script output as
+ground truth instead of copying counts into new docs; use
+`docs/BUILD_STATUS.md` only as recorded historical evidence.
 
 ## Develop locally
 

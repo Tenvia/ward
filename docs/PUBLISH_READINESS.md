@@ -28,8 +28,9 @@ GHCR target: ghcr.io/tenvia/ward-api
   `github.repository_owner`, so it publishes to
   `ghcr.io/tenvia/ward-api` as long as the repo lives at
   `github.com/Tenvia/ward` (metadata-action lowercases the org name).
-  `docker-compose.pull.yml` defaults to
-  `ghcr.io/tenvia/ward-api:v0.1.0-rc1` (override with `WARD_IMAGE=`).
+  `docker-compose.pull.yml` currently defaults to the latest published
+  baseline, `ghcr.io/tenvia/ward-api:v0.1.0-rc3` (override with
+  `WARD_IMAGE=`).
 - Org-transfer note: publishing from an org repo may additionally
   require the Tenvia org to allow GitHub Actions to create packages
   (org settings -> packages / actions permissions). Check this before

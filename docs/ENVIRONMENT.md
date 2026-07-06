@@ -49,16 +49,58 @@ Rules:
   control-auth status, Control Room bundling, served OpenAPI, and runner
   status.
 
-## Required variables
+## Supported variable matrix
 
-Ward does not require any environment variable to boot in the local mock
-mode. For a safe evaluator path, the following are operationally
-required even though the process has permissive defaults:
+This matrix is the evaluator contract. It uses the requested RC4
+categories directly:
 
-| Variable | Required for | Default | Contract |
-| --- | --- | --- | --- |
-| `WARD_REQUIRE_CONTROL_TOKEN` | Safe evaluator control-plane use | API default `false`; user/pull compose default `true` | Set `true` so mutating `/ward/*` endpoints require `Authorization: Bearer <WARD_CONTROL_TOKEN>`. Read endpoints remain open. |
-| `WARD_CONTROL_TOKEN` | Auth-enabled control mutations | Empty in API/root compose; `ward-demo-token` in user/pull compose | Shared bearer token prototype. Use a long random local token for evaluation. Empty token with `WARD_REQUIRE_CONTROL_TOKEN=true` makes mutations fail closed. |
+1. Required
+2. Optional
+3. Prototype-only
+4. Dangerous/dev-only
+5. Deployment/process variables
+6. Storage/persistence variables
+7. Control/auth variables
+8. Upstream/provider variables
+9. Detection/cost/containment variables
+10. Runner/test/smoke variables
+
+| Name | Category / surface | Purpose | Required? | Safe local default and example | Evaluator/demo safe? | Change before shared use? | Missing or invalid behavior |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `PORT` | Optional; deployment/process; API, compose, demo app | Selects service listen port. | No | API `4317`; demo SaaS `4401`. Example: `PORT=4317`. | Yes, if port is local. | Only if `4317` conflicts or the service is bound differently. | Missing uses each service default. Invalid non-number in API falls back to `4317`; invalid in demo app can produce an unusable port because the example app casts with `Number(...)`. |
+| `WARD_DEPLOYMENT_MODE` | Optional; deployment/process; API, compose, health/tenant responses | Labels the tenant deployment mode. It does not enable hosted or Kubernetes behavior. | No | `local`; compose sets `docker`. Example: `WARD_DEPLOYMENT_MODE=docker`. | Yes as a label. | No. | Missing or invalid falls back to `local`. |
+| `WARD_REQUIRE_CONTROL_TOKEN` | Required for safe evaluator use; control/auth; API, compose, health, Control Room mutations | Requires `Authorization: Bearer <WARD_CONTROL_TOKEN>` on mutating `/ward/*` routes. Reads remain open. | Operationally yes for evaluator/shared use; not required to boot. | API/root compose default `false`; user/pull compose default `true`. Example: `WARD_REQUIRE_CONTROL_TOKEN=true`. | Yes when paired with a non-demo token. | Yes; shared or exposed local networks must use `true`. | Missing in API/root compose leaves control mutations unauthenticated and `/health` warns. Any value other than literal `true` is false. |
+| `WARD_CONTROL_TOKEN` | Required when auth is enabled; control/auth; API, Control Room, smoke scripts, `wardctl` | Shared bearer token for control mutations. Prototype only; not RBAC, OIDC, identity, or rotation. | Yes when `WARD_REQUIRE_CONTROL_TOKEN=true`. | Empty in API/root compose; `ward-demo-token` in user/pull compose. Example: generated `openssl rand -hex 24`. | Safe only when generated locally and kept secret. | Yes; replace `ward-demo-token` before any shared use. | Missing with auth disabled leaves no protection. Missing with auth enabled makes mutating routes fail closed with `503 ward_control_auth_misconfigured`; wrong token returns `401`. |
+| `WARD_STORAGE` | Optional; storage/persistence; API, compose, SQLite | Selects persistence backend. | No | API default `memory`; evaluator compose sets `sqlite`. Example: `WARD_STORAGE=sqlite`. | `sqlite` is safe for local prototype persistence. | No for local demos; choose deliberately before relying on restart persistence. | Missing uses `memory` in raw API and `sqlite` in compose. Any value other than `sqlite` selects `memory`, losing tenant/audit state on restart. |
+| `WARD_SQLITE_PATH` | Optional; storage/persistence; API, compose, SQLite, incident export | SQLite file path when `WARD_STORAGE=sqlite`. | Required only for stable persisted location. | `.ward/ward.db`; containers use `/data/ward.db`. Example: `WARD_SQLITE_PATH=/data/ward.db`. | Yes when backed by a local file or named volume. | Keep stable before shared evaluation; changing it starts from a different DB. | Missing uses `.ward/ward.db`. Wrong path can create a fresh empty DB or fail if parent permissions block writes. Deleting file/volume loses persisted state. |
+| `WARD_PROXY_FAIL_MODE` | Optional; prototype-only containment/failure; API, compose, reliability smoke | Chooses behavior when policy lookup fails while Ward is still running. | No | `open`. Example: `WARD_PROXY_FAIL_MODE=open` or `closed`. | Yes, but choose based on evaluation question. | Decide explicitly for any shared demo. | Missing or invalid falls back to `open`; successful policy reads still enforce paused/constrained tenants. |
+| `WARD_MODE` | Optional; detection/cost/containment; API, health, proxy, smokes | Global enforcement mode: `enforce` blocks, `observe` records would-block evidence. | No | `enforce`. Example: `WARD_MODE=enforce`. | Yes. | Use `enforce` when demonstrating actual containment. | Missing or invalid falls back to `enforce`; observe does not bypass missing tenant header, auth, fail-closed, or upstream errors. |
+| `WARD_LOOP_WINDOW_MS` | Optional; detection/cost/containment; API, compose | Pressure-detection time window. | No | `10000`. Example: `WARD_LOOP_WINDOW_MS=10000`. | Yes. | No. | Missing or non-finite falls back to `10000`. |
+| `WARD_LOOP_REQUEST_THRESHOLD` | Optional; detection/cost/containment; API, compose | Requests per window before pressure is detected. | No | `8`. Example: `WARD_LOOP_REQUEST_THRESHOLD=8`. | Yes. | No. | Missing or non-finite falls back to `8`. |
+| `WARD_ESTIMATED_COST_PER_REQUEST` | Optional; detection/cost; API, compose | Fixed prototype cost estimate per proxy call. Not real billing. | No | `0.002`. Example: `WARD_ESTIMATED_COST_PER_REQUEST=0.002`. | Yes if described as fake cost. | No. | Missing or non-finite falls back to `0.002`. |
+| `WARD_APPROVAL_TTL_MS` | Optional; prototype-only control/auth; API approvals | Approval-token TTL. Tokens remain memory-only and single-use. | No | `120000`. Example: `WARD_APPROVAL_TTL_MS=120000`. | Yes for local demos. | No. | Missing or non-finite falls back to `120000`; existing tokens do not persist across process restart. |
+| `WARD_UPSTREAM_OPENAI_BASE_URL` | Optional; upstream/provider; API provider path | Enables non-streaming pass-through only when paired with `OPENAI_API_KEY`. | No | Unset for mock upstream. Example: `WARD_UPSTREAM_OPENAI_BASE_URL=https://api.openai.com/v1`. | Mock mode is safest. Real provider mode can spend money. | Yes; set only intentionally and do not confuse with full OpenAI compatibility. | Missing or missing key uses deterministic mock upstream. Invalid or unreachable provider returns upstream failure (`502`) once a request reaches provider mode. |
+| `OPENAI_API_KEY` | Optional secret; upstream/provider; API provider path | Provider API key for pass-through mode. | No | Unset. Example: provider key in local secret store, not committed. | Safe only if kept secret and spending is acceptable. | Yes; never commit, paste, or bake into images. | Missing or missing base URL uses mock upstream. Invalid key typically returns upstream failure (`502`) after provider call. |
+| `WARD_ENABLE_DOCKER_RUNNER` | Dangerous/dev-only; runner; API Docker runner, health | Enables the prototype Docker runner. | No | `false`. Example only for local dev: `WARD_ENABLE_DOCKER_RUNNER=true`. | Safe only on a trusted local developer machine. | Do not enable on shared/public hosts. | Missing or anything other than literal `true` disables the runner; runner routes fail rather than launching containers. |
+| `WARD_DOCKER_ALLOWED_IMAGES` | Dangerous/dev-only; runner; API Docker runner | Comma-separated Docker image allowlist. | No | `ward-example-agent`. Example: `WARD_DOCKER_ALLOWED_IMAGES=ward-example-agent`. | Only with runner disabled or on trusted local host. | Yes if runner is enabled; keep the allowlist narrow. | Missing uses `ward-example-agent`; whitespace is trimmed; empty entries ignored; disallowed images are rejected. |
+| `WARD_DOCKER_RUN_TIMEOUT_MS` | Dangerous/dev-only; runner; API Docker runner | Hard timeout for runner-launched containers. | No | `30000`. Example: `WARD_DOCKER_RUN_TIMEOUT_MS=30000`. | Only for local runner demos. | No, unless the demo needs shorter timeouts. | Missing or non-finite falls back to `30000`. |
+| `WARD_TEST_FORCE_POLICY_ERROR` | Dangerous/dev-only; runner/test/smoke; API, reliability smoke | Forces policy lookup errors for fail-open/fail-closed verification. | No | `false`. Example only in smokes: `WARD_TEST_FORCE_POLICY_ERROR=true`. | No outside tests. | Never set in shared evaluation. | Missing or anything other than literal `true` is false. If true, normal policy lookup fails by design. |
+| `WARD_OPENAPI_DIR` | Optional packaging/internal; API, verifier/image packaging | Overrides where the API looks for `ward.v0.yaml` / `.json`. | No | Unset. Example in packaging only: `WARD_OPENAPI_DIR=openapi`. | Not needed for evaluators. | No. | Missing searches packaged/default locations. Wrong path makes `/openapi.yaml` unavailable and `/health.openapi.served` false. |
+| `WARD_UI_DIR` | Optional packaging/internal; API, Control Room bundle | Overrides bundled Control Room asset directory. | No | `ui` in the image. Example in packaging only: `WARD_UI_DIR=ui`. | Not needed for evaluators. | No. | Missing uses `ui`. Wrong path makes `/` return the missing-assets JSON instead of the Control Room; `/health.controlRoomBundled` is false. |
+| `VITE_WARD_API_URL` | Optional developer build-time; Control Room | API base URL for separately served Vite UI. | No | Same origin when bundled; Vite dev uses `http://localhost:4317`. Example: `VITE_WARD_API_URL=http://localhost:4317`. | Yes in local dev. | No. | Missing works for bundled UI and normal Vite dev. Wrong value points the UI at the wrong API. |
+| `VITE_WARD_CONTROL_TOKEN` | Prototype/dev-only build-time; Control Room | Seeds the Control Room token field at build time; localStorage wins at runtime. | No | Empty. Example only for local demo builds. | Safe only with demo/local tokens. | Do not embed real tokens in built assets. | Missing leaves token field empty. Wrong value causes 401 until operator pastes the correct token. |
+| `WARD_IMAGE` | Optional; deployment/process; pull compose, post-publish verifier docs | Pins the prebuilt image used by `docker-compose.pull.yml`. | No | Compose default is `ghcr.io/tenvia/ward-api:v0.1.0-rc3`. Example: same. | Yes. | Pin deliberately for repeatable evaluation. | Missing uses compose default. Wrong/private/unpublished image makes `docker compose pull/up` fail. |
+| `WARD_IMAGE_NAME` | Optional maintainer build-only; image build script | Image repository for local multi-arch build validation. | No | `ghcr.io/tenvia/ward-api`. Example: `WARD_IMAGE_NAME=ghcr.io/tenvia/ward-api`. | Maintainer-only. | No; script does not push. | Missing uses script default. Wrong name only affects local build tag. |
+| `WARD_IMAGE_TAG` | Optional maintainer build-only; image build script | Image tag for local build validation. | No | `dev`. Example: `WARD_IMAGE_TAG=dev`. | Maintainer-only. | No; publishing is not controlled by this variable. | Missing uses script default. Wrong tag only affects local build tag. |
+| `WARD_API_URL` | Optional; runner/test/smoke; `wardctl`, smokes, incident export API mode | Points local tools at a running Ward API. | No | `http://localhost:4317`. Example: `WARD_API_URL=http://localhost:4317`. | Yes. | No. | Missing uses tool defaults. Wrong URL makes tools fail connection or hit the wrong Ward instance. |
+| `WARD_DEMO_URL` | Optional; runner/test/smoke; demo smoke | Points `smoke:demo` at the example SaaS app. | No | `http://localhost:4401`. Example: `WARD_DEMO_URL=http://localhost:4401`. | Yes. | No. | Missing uses default; if unreachable, smoke drives the Ward proxy directly. Wrong URL can fail the demo-app path. |
+| `WARD_BENCH_REQUESTS` | Optional; runner/test/smoke; latency benchmark | Request count per benchmark scenario. | No | `50`. Example: `WARD_BENCH_REQUESTS=50`. | Yes for local benchmarking; not an SLA. | No. | Missing uses `50`; invalid values can make the benchmark nonsensical because it casts with `Number(...)`. |
+| `WARD_PROXY_BASE_URL` | Optional; runner/test/smoke; demo SaaS | Base URL the example SaaS uses for Ward proxy calls. | No | `http://localhost:4317`; root compose uses `http://ward-api:4317`. | Yes. | Set correctly for compose/network topology. | Missing uses localhost. Wrong URL makes demo SaaS calls fail or bypass the intended Ward instance. |
+| `WARD_BASE_URL` | Optional; runner/test/smoke; example agent | Ward API base URL for the example agent container when run manually. | No | `http://localhost:4317`; Docker runner injects its own callback URL. | Local example only. | No. | Missing uses localhost. Wrong URL makes the example agent fail to reach Ward. |
+| `WARD_TENANT_ID` | Optional; runner/test/smoke; example agent | Tenant used by example agent. | No | `tenant_globex`. Example: `WARD_TENANT_ID=tenant_globex`. | Yes. | No. | Missing uses `tenant_globex`; wrong value attributes calls to another tenant. |
+| `AGENT_STEPS` | Optional; runner/test/smoke; example agent | Number of example-agent steps. | No | `5`. Example: `AGENT_STEPS=5`. | Yes. | No. | Missing uses `5`; invalid values can make the example agent skip or mis-run steps because it casts with `Number(...)`. |
+| `AGENT_STEP_DELAY_MS` | Optional; runner/test/smoke; example agent | Delay between example-agent steps. | No | `1000`. Example: `AGENT_STEP_DELAY_MS=1000`. | Yes. | No. | Missing uses `1000`; invalid values can make delays nonsensical because it casts with `Number(...)`. |
+
 
 ## Ward API runtime variables
 
@@ -106,11 +148,16 @@ These variables are consumed by compose files or image-build tooling.
 | `WARD_IMAGE_NAME` | maintainer build-only | `ghcr.io/tenvia/ward-api` | `scripts/build-image.sh multiarch` | Names the image for a local multi-arch build validation. The script never pushes. |
 | `WARD_IMAGE_TAG` | maintainer build-only | `dev` | `scripts/build-image.sh multiarch` | Tags the image for a local multi-arch build validation. Publishing happens only via GitHub Actions on version tags or manual dispatch. |
 
-Compose also passes selected API runtime variables into containers:
+Compose files pass or hardcode selected API runtime variables into
+containers. Root compose passes `PORT`, `WARD_DEPLOYMENT_MODE`,
 `WARD_PROXY_FAIL_MODE`, `WARD_REQUIRE_CONTROL_TOKEN`,
 `WARD_CONTROL_TOKEN`, `WARD_LOOP_WINDOW_MS`,
 `WARD_LOOP_REQUEST_THRESHOLD`, `WARD_ESTIMATED_COST_PER_REQUEST`,
-`WARD_STORAGE`, and `WARD_SQLITE_PATH`.
+`WARD_STORAGE`, and `WARD_SQLITE_PATH`. User/pull compose hardcode
+`PORT=4317`, `WARD_DEPLOYMENT_MODE=docker`,
+`WARD_STORAGE=sqlite`, and `WARD_SQLITE_PATH=/data/ward.db`; user
+compose also passes loop thresholds, while pull compose keeps only the
+image, control-auth token, and fail-mode knobs overridable.
 
 ## CLI, smoke, and benchmark variables
 

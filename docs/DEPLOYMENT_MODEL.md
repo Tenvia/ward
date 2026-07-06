@@ -36,16 +36,19 @@ the Docker build. Verified end-to-end by
 `./scripts/smoke-user-install.sh`. See
 `docs/USER_INSTALL_NO_NPM.md`.
 
-### 1c. Prebuilt image (implemented prototype — published 2026-07-05)
+### 1c. Prebuilt image (implemented prototype — latest published baseline v0.1.0-rc3)
 
 `docker-compose.pull.yml` mirrors the user bundle against
-`ghcr.io/tenvia/ward-api:v0.1.0-rc1` (public; Tenvia org owns
+`ghcr.io/tenvia/ward-api:v0.1.0-rc3` by default
+(`WARD_IMAGE`-overridable; public; Tenvia org owns
 `github.com/Tenvia/ward`), published by
 `.github/workflows/docker-image.yml` on the version tag
-(linux/amd64 + linux/arm64). Verified end to end: anonymous pull,
-boot, containment flow, control auth, and SQLite persistence across a
-container restart. `docker-compose.user.yml` remains the local-build
-path.
+(linux/amd64 + linux/arm64). RC3 publish evidence records anonymous
+pull, boot, `/health`, served contract, and prototype scope in
+`docs/PUBLISH_READINESS.md`. The pull compose path keeps the demo-token
+fallback for local convenience; use `docs/EVALUATOR_QUICKSTART.md` to
+override it with a generated local token. `docker-compose.user.yml`
+remains the local-build path.
 
 ### 2. Docker Compose (implemented prototype)
 

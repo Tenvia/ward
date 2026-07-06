@@ -11,8 +11,9 @@ do not cut the RC.
 - `./scripts/verify-release.sh` — all sections PASS, zero SKIPPED.
   (Includes: OpenAPI validation, typechecks, SDK + Control Room
   builds, containment smoke, SDK smoke, OpenAPI live conformance,
-  reliability smoke, both browser E2Es, all compose configs, local
-  image build, and user install smoke.)
+  reliability smoke, all four RC3 prototype smokes, both browser E2Es
+  when Playwright is installed, all compose configs, local image build,
+  and user install smoke.)
 - `npm run smoke:openapi` against a running instance — live responses
   conform to `openapi/ward.v0.yaml`.
 - `docker compose -f docker-compose.user.yml up --build` starts one
@@ -62,9 +63,13 @@ operations.
 ## 7. Known caveats (carry into release notes)
 
 Single-node only; state resets on `docker compose down -v`; pass-through
-upstream mode untested; mise tasks unexercised; no unit test suite
-(coverage = five smoke suites + two browser E2Es); `proxy_fail_open`
-audit is best-effort when storage itself is failing.
+upstream mode is limited to non-streaming requests and still needs
+provider-specific evaluation; approval tokens and workflow runs remain
+in-memory; `proxy_fail_open` audit is best-effort when storage itself is
+failing; SQLite is local prototype state, not HA or compliance storage.
+Test authority is `./scripts/verify-release.sh`: the API unit suite
+covers state/control primitives, while integration confidence is smoke
+and E2E coverage, with scripts printing their own counts.
 
 ## 8. Exact command checklist
 
@@ -81,7 +86,8 @@ docker compose -f docker-compose.user.yml up --build
       (`github.com/Tenvia/ward`; image: `ghcr.io/tenvia/ward-api`)
 - [ ] GHCR package permissions confirmed for `GITHUB_TOKEN`
 - [ ] Image name confirmed
-- [ ] Version/tag confirmed (consider `v0.1.0-rc1` first)
+- [ ] Version/tag confirmed (use the next unreleased RC tag; do not
+      reuse any published tag)
 - [ ] Release notes reviewed
 - [ ] `docs/CLAIMS_AND_EVIDENCE.md` reviewed
 - [ ] No Saastle dependency confirmed (grep runtime paths)

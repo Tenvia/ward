@@ -53,12 +53,12 @@ internal 10via practice; see `docs/SAASTLE_SOURCE_MAP.md`).
 | Formal OpenAPI contract | prototype | `openapi/ward.v0.yaml` (+ generated `.json`) covering all 14 implemented paths and 13 core schemas, with prototype-status honesty notes inline. Validated by `npm run validate:openapi`. |
 | API-served OpenAPI contract | prototype, demo-supported | `GET /openapi.yaml` and `GET /openapi.json` served by the API (bundled into the Docker image); `/health` reports `openapi.served`. Verified via smoke-demo, the user install smoke, and a `docker run` of the local image. |
 | Local release image build | prototype | `./scripts/build-image.sh local` -> `ward-api:local` (API + Control Room + OpenAPI). Verified: built and `docker run` served `/health`, `/openapi.yaml`, and the Control Room at `/`. Multi-arch command prepared (push=false), not exercised. |
-| Published registry image | prototype, demo-supported | `ghcr.io/tenvia/ward-api:v0.1.0-rc1` (+ `0.1.0-rc1`), public, linux/amd64+arm64, digest `sha256:2c34f247…`, revision label `bca2396`. Anonymous pull verified 2026-07-05. Note: the tag was pushed twice during release prep (an earlier `bf63411` build was superseded pre-announcement); published tags are not reused after this point. |
-| Pull-based Compose file | prototype, demo-supported | `docker-compose.pull.yml` against `ghcr.io/tenvia/ward-api:v0.1.0-rc1` (WARD_IMAGE-overridable). Verified 2026-07-05 against the published image: anonymous pull, boot, health/contract/Control Room, full containment sequence, control-auth 401, SQLite persistence across container restart. |
-| Release verification script | prototype | `./scripts/verify-release.sh` — OpenAPI validation, typechecks, builds, all four smokes, both E2Es, compose configs, local image build; explicit SKIPPED reporting, no silent skips. Full run passed (see BUILD_STATUS). RC3 prototype smokes (`smoke:audit-durability`, `smoke:tenant-mode-override`, `smoke:incident-receipt`, `smoke:rc3-failure-behavior`) are NOT yet included — see "Open risks" below. |
-| GitHub Actions publish workflow | prototype (executed) | `.github/workflows/docker-image.yml` — GHCR, linux/amd64+arm64, tags `v*` or manual dispatch only, standard `GITHUB_TOKEN`. First executed on the `v0.1.0-rc1` tag (run 28736769316, 2026-07-05); published digest `sha256:2c34f247…` from commit `bca2396`. |
+| Published registry image | prototype, demo-supported | Latest published baseline: `ghcr.io/tenvia/ward-api:v0.1.0-rc3` (linux/amd64+arm64), published by workflow run `28756686801` from commit `ada1658`; anonymous pull and `/health` verified per `docs/PUBLISH_READINESS.md`. Earlier `v0.1.0-rc1` remains historical evidence for first-publish procedure and the tag-reuse deviation; published tags are not reused after that point. |
+| Pull-based Compose file | prototype, demo-supported | `docker-compose.pull.yml` now defaults to `ghcr.io/tenvia/ward-api:v0.1.0-rc3` and remains `WARD_IMAGE`-overridable. The pull path is a local/container prototype path with SQLite volume and demo-token fallback; evaluator-safe use requires explicit `.env` with a generated token. RC3 publish evidence verifies anonymous pull, boot, health/contract, and prototype scope. |
+| Release verification script | prototype | `./scripts/verify-release.sh` — OpenAPI validation, typechecks, SDK + Control Room builds, containment demo smoke, SDK smoke, OpenAPI live conformance, all four RC3 prototype smokes, reliability smoke, conditional E2Es, compose configs, local image build, and no-NPM user install smoke; explicit SKIPPED reporting, no silent skips. |
+| GitHub Actions publish workflow | prototype (executed) | `.github/workflows/docker-image.yml` — GHCR, linux/amd64+arm64, tags `v*` or manual dispatch only, standard `GITHUB_TOKEN`. First executed on `v0.1.0-rc1`; latest published baseline recorded here is `v0.1.0-rc3`. |
 | Design-partner quickstart | prototype | `docs/DESIGN_PARTNER_QUICKSTART.md` — 8-step curl/UI walkthrough matching the verified demo behavior. |
-| Live OpenAPI response conformance | prototype, demo-supported | `npm run smoke:openapi` (`scripts/smoke-openapi-conformance.mjs`) — 26 checks validating live responses (required fields, types, enums, nested shapes) against the contract's schemas across the full containment flow. Not yet included in `verify-release.sh` after the RC3 contract changes. |
+| Live OpenAPI response conformance | prototype, demo-supported | `npm run smoke:openapi` (`scripts/smoke-openapi-conformance.mjs`) validates live responses (required fields, types, enums, nested shapes) against the contract's schemas across the full containment flow. It is included in `verify-release.sh`. |
 | Release-candidate checklist | prototype | `docs/RELEASE_CANDIDATE_CHECKLIST.md` — v0.1.0 gates, allowed-prototype list, must-not-claim list, do-not-publish-unless gates. |
 | Design-partner evaluation script | prototype | `docs/DESIGN_PARTNER_EVALUATION_SCRIPT.md` — demo flow, discovery questions, objection handling aligned to Strategy A ("containment layer over existing tools"). |
 | Publish-readiness checklist | prototype (publish executed 2026-07-05) | `docs/PUBLISH_READINESS.md` — owner/permissions/tag gates, publish commands, post-publish verification (performed against the live package), rollback notes. |
@@ -144,19 +144,13 @@ unit/integration sense.
 
 RC3 prototype rows above are each grounded in a passing command; if
 the command's exit code changes to non-zero in a future session, the
-row's status must drop or the row must be removed. New RC3 smokes are
-wired to `verify-release.sh` only when explicitly updated there; the
-Release verification script row above notes the current gap.
+row's status must drop or the row must be removed. The RC3 prototype
+smokes and live OpenAPI conformance smoke are now wired into
+`verify-release.sh`; the verifier output is the current authority for
+their pass/fail status.
 
 ## Open risks inherited at end of RC3
 
-- `scripts/verify-release.sh` does not yet include any of the RC3
-  prototype smokes (`smoke:audit-durability`, `smoke:tenant-mode-override`,
-  `smoke:incident-receipt`, `smoke:rc3-failure-behavior`). Slice 7's
-  permission-to-update was "small + safe" — given that the four smokes
-  spawn their own Ward processes and bind test-only ports, wiring
-  them is mechanical; defer to Slice 8 (final RC3 verification)
-  which has the explicit scope to refresh `verify-release.sh`.
 - Each `schemaVersion` round-trip ships only local SQLite. A future
   RC3-bump (schema v2) needs a row-migration story; flagged now,
   no work done.
