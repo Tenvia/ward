@@ -4,7 +4,7 @@
 >
 > Canonical direction: `product/DIRECTION_v2.md`
 >
-> Execution rules: `../AGENTS.md` and `MINIMAX_EXECUTION_WORKFLOW.md`
+> Execution rules: `../../AGENTS.md` and `MINIMAX_EXECUTION_WORKFLOW.md`
 
 ## Purpose
 
