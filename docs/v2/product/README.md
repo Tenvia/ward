@@ -10,6 +10,18 @@
 2. [`EXECUTION_PLAN_v2.md`](EXECUTION_PLAN_v2.md) — validation gates, paid-pilot requirements, workstreams, verification, and the bounded Voilà execution protocol.
 3. [`MVP_OPTIONS_v2.md`](MVP_OPTIONS_v2.md) — pre-decision comparison retained for rationale and hypothesis history.
 
+## Agent execution controls
+
+MiniMax and other coding agents must also use:
+
+1. [`../../../AGENTS.md`](../../../AGENTS.md) — repository-wide agent authority, scope, decision, retry, verification, and completion rules.
+2. [`../MINIMAX_EXECUTION_WORKFLOW.md`](../MINIMAX_EXECUTION_WORKFLOW.md) — reusable Ward and Voilà execution-state workflow.
+3. [`../WORK_BREAKDOWN.md`](../WORK_BREAKDOWN.md) — controlled work-item and phase index.
+4. [`../work-items/WV2-VAL-001.md`](../work-items/WV2-VAL-001.md) — current bounded validation packet.
+5. [`../MINIMAX_BEHAVIORAL_EVALUATION.md`](../MINIMAX_BEHAVIORAL_EVALUATION.md) — behavioral evaluation design reserved for a separate Voilà implementation task.
+
+Do not assign MiniMax the entire roadmap as an open-ended task. Provide one active work packet and stop at owner-controlled gates.
+
 ## Selected direction
 
 Ward v2 will become a **customer-autonomy control plane for multi-tenant AI applications**.
@@ -49,12 +61,15 @@ A pilot proof contract may narrow implementation details, but it may not broaden
 
 ## Current next step
 
-The next authorized work is validation and pilot preparation:
+The current authorized packet is `WV2-VAL-001`: prepare the validation and paid-pilot artifact set.
 
-- buyer and workflow interviews;
+That packet covers:
+
+- interview guidance;
 - current-workflow reconstruction;
-- paid-pilot offer;
+- paid-pilot offer structure;
 - pilot proof-contract template;
-- candidate capability selection.
+- durable decision-record template;
+- candidate capability selection rubric.
 
 Do not begin the Ward v2 runtime build until the evidence and paid-pilot gates in `EXECUTION_PLAN_v2.md` are satisfied or the owner records a deliberate exception.
