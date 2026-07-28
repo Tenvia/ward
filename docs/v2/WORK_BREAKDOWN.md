@@ -39,7 +39,7 @@ Ward v2 runtime implementation is not currently authorized.
 
 ### WV2-VAL-001 — Prepare the evidence and pilot artifact set
 
-**Status:** READY
+**Status:** ACTIVE
 
 **Packet:** `work-items/WV2-VAL-001.md`
 
@@ -50,6 +50,8 @@ This item is documentation and planning only. It does not authorize runtime code
 ## Validation phase
 
 ### WV2-VAL-001 — Prepare evidence and pilot artifacts
+
+**Status:** ACTIVE
 
 **Dependency:** accepted v2 direction.
 
